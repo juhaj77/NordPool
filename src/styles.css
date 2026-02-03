@@ -1,5 +1,48 @@
-/* Lisää tämä tiedoston huipulle */
 @import url('https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+/* 1. PERUSNOLLAUS - Poistaa scrollbarit ja oletusmarginaalit */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Estää sivun rullauksen */
+  font-family: 'Funnel Sans', sans-serif;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* 2. SIVUN TAUSTA JA KORTIN KESKITYS */
+.app-root {
+  background-color: #f1f5f9;
+  height: 100vh;
+  width: 100vw;
+  display: flex;          /* Aktivoi flex-keskityksen */
+  justify-content: center; /* Keskittää vaakasuunnassa */
+  align-items: center;     /* Keskittää pystysuunnassa */
+}
+
+/* 3. KORTTI */
+.card {
+  background-color: #ffffff;
+  width: 95%;             /* Leveys pienillä näytöillä */
+  max-width: 1400px;      /* Maksimileveys */
+  height: 90vh;           /* Korkeus suhteessa ruutuun */
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box; /* Pitää paddingin kortin sisällä */
+}
+
+/* 4. OTSIKKORIVI */
+.header {
+  margin-bottom: 20px;
+}
 
 .header .title {
   display: flex;
@@ -7,94 +50,67 @@
   align-items: center;
   width: 100%;
   margin: 0;
-  font-size: 1.25rem; /* Voit säätää kokoa tarvittaessa */
+  font-size: 1.4rem;
+  color: #1e293b;
 }
 
-/* Keskellä oleva teksti */
+/* Otsikon dynaamiset osat */
 .current-price {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #ef4444; /* Punainen, jotta täsmää NYT-viivaan */
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ef4444;
   background: #fef2f2;
-  padding: 4px 12px;
+  padding: 6px 16px;
   border-radius: 20px;
 }
 
-/* Oikeassa reunassa oleva teksti */
 .max-price {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
   color: #475569;
 }
 
-
+/* 5. KAAVIOALUE */
 .chart-container {
+  flex: 1;                /* Täyttää kortin loppuosan */
   width: 100%;
-  height: 80vh;
+  min-height: 0;          /* Tärkeä: mahdollistaa kaavion kutistumisen */
 }
 
-@media (max-width: 600px) {
-  .header .title {
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-  }
-  .chart-container {
-    width: 100%;
-    height: 70vh;
-  }
-}
-/* Global styles */
-html, body, #root {
-  font-family: 'Funnel Sans', sans-serif;
-  height: 100%;
-}
-
-/* Page layout */
-.app-root {
-  padding: 20px;
-  background-color: #f1f5f9;
-  min-height: 100vh;
-}
-
-.card {
-  max-width: 1400px;
-  height: 85vh;
-  margin: 0 auto;
-  background-color: #ffffff;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.header {
-  margin-bottom: 20px;
-}
-
-.title {
-  font-size: 1.6rem;
-  font-weight: bold;
-  margin: 0;
-  color: #1e293b;
-}
-
-
+/* 6. MUUT ELEMENTIT */
 .loading {
-  text-align: center;
-  padding-top: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
   font-size: 1.2rem;
   color: #64748b;
 }
 
 .error-message {
   padding: 40px;
-  color: red;
+  color: #ef4444;
   text-align: center;
 }
 
-/* Recharts default tooltip styling (replaces inline contentStyle) */
+/* Recharts Tooltip korjaus */
 .recharts-default-tooltip {
   border-radius: 8px !important;
   border: none !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 7. MOBIILISOVITUS */
+@media (max-width: 768px) {
+  .header .title {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    font-size: 1.2rem;
+  }
+
+  .card {
+    height: 95vh;
+    padding: 15px;
+  }
 }
