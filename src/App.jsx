@@ -14,13 +14,23 @@ const App = () => {
             const d = new Date();
             const pvm = d.toISOString().split('T')[0];
 
+            // Vaihdetaan proxy corsproxy.io:hun, se on usein vakaampi kuin allorigins
+            const apiUrl = `https://sahkohinta-api.fi/api/vartti/v1/halpa?vartit=96&tulos=sarja&aikaraja=${pvm}`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+
             try {
-                const url = `https://sahkohinta-api.fi/api/vartti/v1/halpa?vartit=96&tulos=sarja&aikaraja=${pvm}`;
-                const res = await fetch(url);
+                const response = await fetch(proxyUrl);
 
-                if (!res.ok) throw new Error("Haku epäonnistui.");
+                if (!response.ok) {
+                    throw new Error(`Yhteysvirhe: ${response.status}`);
+                }
 
-                const data = await res.json();
+                const data = await response.json();
+
+                if (!data || !Array.isArray(data)) {
+                    throw new Error("Datan muoto virheellinen tai dataa ei löytynyt.");
+                }
+
                 const formattedData = data.map(item => ({
                     time: item.aikaleima_suomi.includes('T')
                         ? item.aikaleima_suomi.split('T')[1].substring(0, 5)
@@ -31,7 +41,8 @@ const App = () => {
                 setPrices(formattedData.sort((a, b) => a.time.localeCompare(b.time)));
                 setError(null);
             } catch (err) {
-                setError(err.message);
+                console.error("Haku epäonnistui:", err);
+                setError("Haku epäonnistui (Proxy aikakatkaisu tai API-virhe). Yritä hetken kuluttua uudelleen.");
             } finally {
                 setLoading(false);
             }
