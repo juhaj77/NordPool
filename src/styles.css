@@ -1,0 +1,66 @@
+/* Lisää tämä tiedoston huipulle */
+@import url('https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+.title {
+  font-family: 'Funnel Sans', sans-serif;
+  font-weight: 800; /* Funnel Sans näyttää upealta lihavoituna */
+  letter-spacing: -0.02em;
+}
+/* Global styles */
+html, body, #root {
+  font-family: 'Funnel Sans', sans-serif;
+  height: 100%;
+}
+
+/* Page layout */
+.app-root {
+  padding: 20px;
+  background-color: #f1f5f9;
+  min-height: 100vh;
+}
+
+.card {
+  max-width: 1400px;
+  height: 85vh;
+  margin: 0 auto;
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin: 0;
+  color: #1e293b;
+}
+
+.chart-container {
+  width: 100%;
+  height: 75vh;
+}
+
+.loading {
+  text-align: center;
+  padding-top: 100px;
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.error-message {
+  padding: 40px;
+  color: red;
+  text-align: center;
+}
+
+/* Recharts default tooltip styling (replaces inline contentStyle) */
+.recharts-default-tooltip {
+  border-radius: 8px !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
