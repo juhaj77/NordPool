@@ -99,7 +99,7 @@ const App = () => {
                         <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart
                                 data={prices}
-                                barCategoryGap={0}
+                                barCategoryGap={'3%'}
                                 margin={{ left: 0, right: 0, top: 30 }}
                             >
                                 <CartesianGrid
