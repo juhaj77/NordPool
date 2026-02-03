@@ -103,7 +103,7 @@ const App = () => {
                 <div className="chart-container">
                     {!loading && prices.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={prices} barGap={0} barCategoryGap="15%">
+                            <BarChart data={prices} barGap={0} barCategoryGap="5%">
                                 <CartesianGrid strokeDasharray="0" vertical={true} horizontal={true} stroke="rgba(0,0,0,0.15)" />
                                 <XAxis
                                     dataKey="time"
@@ -113,8 +113,9 @@ const App = () => {
                                     stroke="#94a3b8"
                                 />
                                 <YAxis
-                                    domain={[0, (dataMax) => Math.ceil(dataMax * 1.1)]}
+                                    domain={[0, 'auto']}
                                     tickCount={10}
+                                    interval={0}
                                     tick={{ fontSize: 12, fontWeight: '600', fill: '#475569' }}
                                     tickFormatter={(val) => `${val.toFixed(0)}`}
                                     stroke="#94a3b8"
