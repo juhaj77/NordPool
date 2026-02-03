@@ -100,7 +100,7 @@ const App = () => {
                             <ComposedChart
                                 data={prices}
                                 barCategoryGap={'3%'}
-                                margin={{ left: 0, right: 0, top: 30 }}
+                                margin={{ left: 0, right: 0, top: 15 }}
                             >
                                 <CartesianGrid
                                     strokeDasharray="0"
@@ -143,13 +143,13 @@ const App = () => {
                                         padding: '10px'
                                     }}
                                     labelStyle={{
-                                        backgroundColor: '#b4c6d8',
+                                        backgroundColor: '#3365ba',
                                         padding: '4px 0',
                                         textAlign: 'center',
                                         borderRadius: '4px',
                                         display: 'block',
                                         marginBottom: '8px',
-                                        color: '#475569',
+                                        color: 'white',
                                         fontWeight: '700',
                                         fontSize: '13px'
                                     }}
@@ -165,13 +165,13 @@ const App = () => {
                                     x={nowKey}
                                     stroke="#ef4444"
                                     strokeWidth={3}
-                                    label={{ value: 'NYT', fill: '#ef4444', position: 'top', fontWeight: 'bold' }}
+                                    label={{ fontSize: '13px', value: 'NYT', fill: '#ef4444', position: 'top', fontWeight: 'bold' }}
                                 />
                                 <Bar dataKey="price" isAnimationActive={false}>
                                     {prices.map((entry) => (
                                         <Cell
                                             key={`cell-${entry.time}`}
-                                            fill={entry.time === nowKey ? '#ef4444' : '#3b82f6'}
+                                            fill={entry.time === nowKey ? '#ef4444' : '#3365ba'}
                                         />
                                     ))}
                                 </Bar>
