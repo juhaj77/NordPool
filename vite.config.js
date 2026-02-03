@@ -8,7 +8,7 @@ export default defineConfig({
             '/api': {
                 target: 'https://www.sahkohinta-api.fi',
                 changeOrigin: true,
-                secure: false,
+                rewrite: (path) => path.replace(/^\/api/, '')
             }
         }
     }

@@ -14,23 +14,19 @@ const App = () => {
             const d = new Date();
             const pvm = d.toISOString().split('T')[0];
 
-            // Vaihdetaan proxy corsproxy.io:hun, se on usein vakaampi kuin allorigins
-            const apiUrl = `https://sahkohinta-api.fi/api/vartti/v1/halpa?vartit=96&tulos=sarja&aikaraja=${pvm}`;
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+            // Jos ollaan localhostissa, käytetään Vite-proxyä (/api)
+            // Jos ollaan Renderissä, käytetään Render-proxyä (/api-proxy)
+            const isLocal = window.location.hostname === 'localhost';
+            const proxyPath = isLocal ? '/api' : '/api-proxy';
+
+            const url = `${proxyPath}/api/vartti/v1/halpa?vartit=96&tulos=sarja&aikaraja=${pvm}`;
 
             try {
-                const response = await fetch(proxyUrl);
+                const response = await fetch(url);
 
-                if (!response.ok) {
-                    throw new Error(`Yhteysvirhe: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Virhe: ${response.status}`);
 
                 const data = await response.json();
-
-                if (!data || !Array.isArray(data)) {
-                    throw new Error("Datan muoto virheellinen tai dataa ei löytynyt.");
-                }
-
                 const formattedData = data.map(item => ({
                     time: item.aikaleima_suomi.includes('T')
                         ? item.aikaleima_suomi.split('T')[1].substring(0, 5)
@@ -41,8 +37,7 @@ const App = () => {
                 setPrices(formattedData.sort((a, b) => a.time.localeCompare(b.time)));
                 setError(null);
             } catch (err) {
-                console.error("Haku epäonnistui:", err);
-                setError("Haku epäonnistui (Proxy aikakatkaisu tai API-virhe). Yritä hetken kuluttua uudelleen.");
+                setError("Hintoja ei saatu ladattua.");
             } finally {
                 setLoading(false);
             }
