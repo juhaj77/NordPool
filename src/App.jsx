@@ -23,7 +23,10 @@ const App = () => {
         if (isInitial) setLoading(true);
 
         const d = new Date();
-        const pvm = d.toISOString().split('T')[0];
+        const vuosi = d.getFullYear();
+        const kuukausi = String(d.getMonth() + 1).padStart(2, '0');
+        const paiva = String(d.getDate()).padStart(2, '0');
+        const pvm = `${vuosi}-${kuukausi}-${paiva}`;
         const isLocal = window.location.hostname === 'localhost';
         const proxyPath = isLocal ? '/api' : '/api-proxy';
         const url = `${proxyPath}/api/vartti/v1/halpa?vartit=96&tulos=sarja&aikaraja=${pvm}`;
