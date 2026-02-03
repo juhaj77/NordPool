@@ -47,21 +47,35 @@ const App = () => {
         fetchPrices(true);
     }, []);
 
-    // Päivitetään sisäistä kelloa minuutin välein
     useEffect(() => {
-        const interval = setInterval(() => {
+        let timeoutId;
+
+        const syncClock = () => {
             const now = new Date();
-            const oldTime = currentTime;
-            setCurrentTime(now);
 
-            // Haetaan uusi data verkosta VAIN jos vuorokausi vaihtuu
-            if (now.getDate() !== oldTime.getDate()) {
-                fetchPrices(false);
-            }
-        }, 60000); // 1 min välein
+            // 1. Päivitetään kello statessa (ja katsotaan samalla vaihtuiko päivä)
+            setCurrentTime(prevTime => {
+                if (now.getDate() !== prevTime.getDate()) {
+                    fetchPrices(false);
+                }
+                return now;
+            });
 
-        return () => clearInterval(interval);
-    }, [currentTime]);
+            // 2. Lasketaan tarkka aika seuraavaan tasaminuuttiin
+            // getSeconds() ja getMilliseconds() kertovat kuinka paljon ollaan jo minuutin yli
+            const msPassedThisMinute = (now.getSeconds() * 1000) + now.getMilliseconds();
+            const msUntilNextMinute = 60000 - msPassedThisMinute;
+
+            // 3. Asetetaan uusi "herätys" seuraavan minuutin kohdalle.
+            // +100ms on vain pieni varmistusvara, jotta Date-objekti on varmasti ehtinyt vaihtua.
+            // Koska msUntilNextMinute lasketaan aina nollasta, viive ei koskaan kasva.
+            timeoutId = setTimeout(syncClock, msUntilNextMinute + 100);
+        };
+
+        syncClock(); // Käynnistetään ensimmäinen kierros
+
+        return () => clearTimeout(timeoutId); // Tuhotaan ajastin jos sivu suljetaan
+    }, []);
 
     // Lasketaan nyt-avain statessa olevan kellon mukaan
     const nowKey = `${String(currentTime.getHours()).padStart(2, '0')}:${String(Math.floor(currentTime.getMinutes() / 15) * 15).padStart(2, '0')}`;
