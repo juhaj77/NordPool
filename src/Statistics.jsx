@@ -96,18 +96,48 @@ const Statistics = () => {
 
     return (
         <div className="card">
-            <div className="header">
-                <h1 className="title">
-                    <span>
-                        ⚡ {daysToFetch > 1 ? `${daysToFetch} pv keskiarvo & keskihajonta` : 'Sähkön hinta tänään'}
-                    </span>
-                    <div className="controls">
-                        <label>Päivät: </label>
-                        <select value={daysToFetch} onChange={(e) => setDaysToFetch(Number(e.target.value))}>
-                            {[1, 2, 3, 7, 14, 30].map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>
-                    </div>
+            <div className="header" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center', // Keskittää molemmat elementit pystysuunnassa
+                marginBottom: '20px'
+            }}>
+                <h1 className="title" style={{ margin: 0 }}>
+                    ⚡ {daysToFetch > 1 ? `${daysToFetch} pv keskiarvo & keskihajonta` : 'Sähkön hinta tänään'}
                 </h1>
+
+                <div className="controls" style={{
+                    display: 'flex',
+                    alignItems: 'center', // Keskittää tekstin ja selectin keskenään
+                    gap: '12px'
+                }}>
+                    <label style={{
+                        fontSize: '1.25rem', // Vastaa h1-kokoa (usein n. 20-24px)
+                        fontWeight: '700',
+                        color: '#1e293b'
+                    }}>
+                        Päivät:
+                    </label>
+                    <select
+                        value={daysToFetch}
+                        onChange={(e) => setDaysToFetch(Number(e.target.value))}
+                        style={{
+                            fontSize: '1.25rem', // Sama fonttikoko kuin tekstillä
+                            fontWeight: '700',
+                            color: '#3365ba',
+                            padding: '4px 8px',
+                            borderRadius: '8px',
+                            border: '2px solid #e2e8f0',
+                            backgroundColor: '#ffffff',
+                            cursor: 'pointer',
+                            outline: 'none'
+                        }}
+                    >
+                        {[1, 2, 3, 7, 14, 30].map(v => (
+                            <option key={v} value={v}>{v}</option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             <div className="chart-container">
