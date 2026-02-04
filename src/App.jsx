@@ -17,8 +17,8 @@ const App = () => {
                 {/* Välilehtivalinta kortin yläpuolella */}
                 <div className="tab-navigation" style={{
                     display: 'flex',
-                    gap: '9px',
-                    marginBottom: '0',
+                    gap: '12px',
+                    marginBottom: '1em',
                     marginLeft: '0'
                 }}>
                     <button
@@ -27,11 +27,13 @@ const App = () => {
                             padding: '5px 24px',
                             fontSize: '14px',
                             fontWeight: '700',
-                            borderRadius: '10px 10px 0px 0px',
+                            borderRadius: '10px',
                             border: 'none',
                             cursor: 'pointer',
-                            backgroundColor: tab === 'current' ? '#ffffff' : '#dee4ef',
+                            backgroundColor: tab === 'current' ? '#ffffff' : 'transparent',
                             color: tab === 'current' ? '#3365ba' : '#64748b',
+                            boxShadow: tab === 'current' ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
+                            transition: 'all 0.2s ease-in-out',
                         }}
                     >
                         ⚡ Live-hinnat
@@ -42,11 +44,13 @@ const App = () => {
                             padding: '5px 24px',
                             fontSize: '14px',
                             fontWeight: '700',
-                            borderRadius: '10px 10px 0px 0px',
+                            borderRadius: '10px',
                             border: 'none',
                             cursor: 'pointer',
-                            backgroundColor: tab === 'tomorrow' ? '#ffffff' : '#dee4ef',
+                            backgroundColor: tab === 'tomorrow' ? '#ffffff' : 'transparent',
                             color: tab === 'tomorrow' ? '#3365ba' : '#64748b',
+                            boxShadow: tab === 'tomorrow' ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
+                            transition: 'all 0.2s ease-in-out',
                         }}
                     >
                         ⚡ Huomenna
@@ -57,11 +61,13 @@ const App = () => {
                             padding: '5px 24px',
                             fontSize: '14px',
                             fontWeight: '700',
-                            borderRadius: '10px 10px 0px 0px',
+                            borderRadius: '10px',
                             border: 'none',
                             cursor: 'pointer',
-                            backgroundColor: tab === 'statistics' ? '#ffffff' : '#dee4ef',
+                            backgroundColor: tab === 'statistics' ? '#ffffff' : 'transparent',
                             color: tab === 'statistics' ? '#3365ba' : '#64748b',
+                            boxShadow: tab === 'statistics' ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
+
                         }}
                     >
                         📊 Tilastot
