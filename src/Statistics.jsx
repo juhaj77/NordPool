@@ -105,21 +105,21 @@ const Statistics = () => {
                 alignItems: 'center',
                 marginBottom: '20px'
             }}>
-                <h1 className="title" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+                <h1 className="title" style={{ margin: 0, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <div>
-                    <span>
-                        ⚡ {daysToFetch > 1 ? `${daysToFetch} pv keskiarvo & keskihajonta` : 'Sähkön hinta tänään'}
-                    </span>
+                    <span>⚡ {daysToFetch > 1 ? `${daysToFetch} pv keskiarvo & ` : 'Sähkön hinta tänään'}</span>
                     {daysToFetch > 1 && (
-                        <img
-                            src={stdIcon}
-                            alt="Standard Deviation"
-                            style={{
-                                height: '3rem',
-                                marginLeft: '30px',
-                                verticalAlign: 'middle'
-                            }}
-                        />
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                            keskihajonta
+                            <img
+                                src={stdIcon}
+                                alt="Standard Deviation"
+                                style={{
+                                    height: '2em',
+                                    verticalAlign: 'middle'
+                                }}
+                            />
+                        </span>
                     )}
                     </div>
                 </h1>
@@ -129,13 +129,7 @@ const Statistics = () => {
                     alignItems: 'center',
                     gap: '12px'
                 }}>
-                    <label style={{
-                        fontSize: '1.25rem',
-                        fontWeight: '700',
-                        color: '#1e293b'
-                    }}>
-                        Päivät:
-                    </label>
+                    <label style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>Päivät:</label>
                     <select
                         value={daysToFetch}
                         onChange={(e) => setDaysToFetch(Number(e.target.value))}
@@ -147,13 +141,10 @@ const Statistics = () => {
                             borderRadius: '8px',
                             border: '2px solid #e2e8f0',
                             backgroundColor: '#ffffff',
-                            cursor: 'pointer',
-                            outline: 'none'
+                            cursor: 'pointer'
                         }}
                     >
-                        {[1, 2, 3, 7, 14, 30].map(v => (
-                            <option key={v} value={v}>{v}</option>
-                        ))}
+                        {[1, 2, 3, 7, 14, 30].map(v => <option key={v} value={v}>{v}</option>)}
                     </select>
                 </div>
             </div>
@@ -166,14 +157,26 @@ const Statistics = () => {
                             <XAxis
                                 dataKey="time"
                                 interval={7}
-                                tickPlacement="on"
-                                padding={{left: 0, right: 0}}
                                 tickFormatter={(t) => t.split(':')[0]}
                                 tick={{fontSize: 11, fill: '#64748b'}}
                             />
                             <YAxis tick={{fontSize: 11, fill: '#64748b'}} tickFormatter={(v) => v.toFixed(0)} />
+
                             <Tooltip
                                 labelFormatter={(label) => `Klo ${label}`}
+                                // TUMMENNUS TÄSSÄ:
+                                contentStyle={{
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                                    color: '#1e293b'
+                                }}
+                                itemStyle={{
+                                    color: '#1e293b',
+                                    fontWeight: '600',
+                                    padding: '2px 0'
+                                }}
+                                labelStyle={{ fontWeight: '800', marginBottom: '4px', color: '#3365ba' }}
                                 formatter={(value, name, props) => {
                                     if (name === "stdRange") {
                                         const stdValue = props.payload.stdDev;
@@ -185,36 +188,15 @@ const Statistics = () => {
                             />
 
                             {daysToFetch > 1 && (
-                                <Area
-                                    type="monotone"
-                                    dataKey="stdRange"
-                                    fill="#cbd5e1"
-                                    stroke="none"
-                                    name="stdRange"
-                                    isAnimationActive={false}
-                                />
+                                <Area type="monotone" dataKey="stdRange" fill="#cbd5e1" stroke="none" name="stdRange" isAnimationActive={false} />
                             )}
 
                             {daysToFetch === 1 && (
-                                <Line
-                                    type="stepAfter"
-                                    dataKey="currentDayPrice"
-                                    stroke="#3365ba"
-                                    strokeWidth={3}
-                                    dot={false}
-                                    name="currentDayPrice"
-                                />
+                                <Line type="stepAfter" dataKey="currentDayPrice" stroke="#3365ba" strokeWidth={3} dot={false} name="currentDayPrice" />
                             )}
 
                             {daysToFetch > 1 && (
-                                <Line
-                                    type="monotone"
-                                    dataKey="avg"
-                                    stroke="#1e293b"
-                                    strokeWidth={2}
-                                    dot={false}
-                                    name="avg"
-                                />
+                                <Line type="monotone" dataKey="avg" stroke="#1e293b" strokeWidth={2} dot={false} name="avg" />
                             )}
 
                             <ReferenceLine x={nowKey} stroke="#ef4444" strokeWidth={2} label={{ value: 'NYT', position: 'top', fill: '#ef4444', fontSize: 10 }} />
