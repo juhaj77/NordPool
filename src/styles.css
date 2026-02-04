@@ -28,9 +28,9 @@ html, body {
 /* 3. KORTTI */
 .card {
   background-color: #ffffff;
-  width: 95%;             /* Leveys pienillä näytöillä */
+  width: 80vw;             /* Leveys pienillä näytöillä */
   max-width: 1400px;      /* Maksimileveys */
-  height: 90vh;           /* Korkeus suhteessa ruutuun */
+  height: 80vh;           /* Korkeus suhteessa ruutuun */
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
