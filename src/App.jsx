@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import CurrentDay from './CurrentDay';
 import Statistics from './Statistics';
+import Tomorrow from './Tomorrow';
 
 const App = () => {
-    const [isCurrentDay, setIsCurrentDay] = useState(true);
+    const [tab, setTab] = useState('current');
 
     return (
         <div className="app-root" style={{
@@ -21,7 +22,7 @@ const App = () => {
                     marginLeft: '4px'
                 }}>
                     <button
-                        onClick={() => setIsCurrentDay(true)}
+                        onClick={() => setTab('current')}
                         style={{
                             padding: '10px 24px',
                             fontSize: '14px',
@@ -29,16 +30,16 @@ const App = () => {
                             borderRadius: '10px 10px 10px 10px',
                             border: 'none',
                             cursor: 'pointer',
-                            backgroundColor: isCurrentDay ? '#ffffff' : 'transparent',
-                            color: isCurrentDay ? '#3365ba' : '#64748b',
-                            boxShadow: isCurrentDay ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
+                            backgroundColor: tab === 'current' ? '#ffffff' : 'transparent',
+                            color: tab === 'current' ? '#3365ba' : '#64748b',
+                            boxShadow: tab === 'current' ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
                             transition: 'all 0.2s'
                         }}
                     >
                         ⚡ Live-hinnat
                     </button>
                     <button
-                        onClick={() => setIsCurrentDay(false)}
+                        onClick={() => setTab('tomorrow')}
                         style={{
                             padding: '10px 24px',
                             fontSize: '14px',
@@ -46,9 +47,26 @@ const App = () => {
                             borderRadius: '10px 10px 10px 10px',
                             border: 'none',
                             cursor: 'pointer',
-                            backgroundColor: !isCurrentDay ? '#ffffff' : 'transparent',
-                            color: !isCurrentDay ? '#3365ba' : '#64748b',
-                            boxShadow: !isCurrentDay ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
+                            backgroundColor: tab === 'tomorrow' ? '#ffffff' : 'transparent',
+                            color: tab === 'tomorrow' ? '#3365ba' : '#64748b',
+                            boxShadow: tab === 'tomorrow' ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        ⚡ Huomenna
+                    </button>
+                    <button
+                        onClick={() => setTab('statistics')}
+                        style={{
+                            padding: '10px 24px',
+                            fontSize: '14px',
+                            fontWeight: '700',
+                            borderRadius: '10px 10px 10px 10px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            backgroundColor: tab === 'statistics' ? '#ffffff' : 'transparent',
+                            color: tab === 'statistics' ? '#3365ba' : '#64748b',
+                            boxShadow: tab === 'statistics' ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
                             transition: 'all 0.2s'
                         }}
                     >
@@ -58,7 +76,9 @@ const App = () => {
 
                 {/* Itse sisältökortit */}
                 <main>
-                    {isCurrentDay ? <CurrentDay /> : <Statistics />}
+                    {tab === 'current' && <CurrentDay />}
+                    {tab === 'tomorrow' && <Tomorrow />}
+                    {tab === 'statistics' && <Statistics />}
                 </main>
             </div>
         </div>
