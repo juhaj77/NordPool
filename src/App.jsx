@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-    ComposedChart, // Käytetään tätä tarkempaan asetteluun
+    ComposedChart,
     Bar,
     XAxis,
     YAxis,
@@ -27,6 +27,7 @@ const App = () => {
         const kuukausi = String(d.getMonth() + 1).padStart(2, '0');
         const paiva = String(d.getDate()).padStart(2, '0');
         const pvm = `${vuosi}-${kuukausi}-${paiva}`;
+
         const isLocal = window.location.hostname === 'localhost';
         const proxyPath = isLocal ? '/api' : '/api-proxy';
         const url = `${proxyPath}/api/vartti/v1/halpa?vartit=96&tulos=sarja&aikaraja=${pvm}`;
@@ -56,26 +57,46 @@ const App = () => {
         fetchPrices(true);
     }, []);
 
-    // Tarkka synkronointi minuutin vaihteeseen
+    // Päivitetään kello sekunnin välein laskuria varten
     useEffect(() => {
-        let timeoutId;
-        const syncClock = () => {
+        const interval = setInterval(() => {
             const now = new Date();
-            setCurrentTime(prevTime => {
-                if (now.getDate() !== prevTime.getDate()) {
-                    fetchPrices(false);
-                }
-                return now;
-            });
 
-            const msUntilNextMinute = 60000 - (now.getSeconds() * 1000 + now.getMilliseconds());
-            timeoutId = setTimeout(syncClock, msUntilNextMinute + 100);
-        };
-        syncClock();
-        return () => clearTimeout(timeoutId);
+            // Jos minuutti vaihtuu, tarkistetaan vuorokauden vaihdos datan hakua varten
+            if (now.getSeconds() === 0) {
+                setCurrentTime(prevTime => {
+                    if (now.getDate() !== prevTime.getDate()) {
+                        fetchPrices(false);
+                    }
+                    return now;
+                });
+            } else {
+                setCurrentTime(now);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
     }, []);
 
+    // Lasketaan nykyinen 15min jakso (avain kaaviolle)
     const nowKey = `${String(currentTime.getHours()).padStart(2, '0')}:${String(Math.floor(currentTime.getMinutes() / 15) * 15).padStart(2, '0')}`;
+
+    // Lasketaan jäljellä oleva aika seuraavaan varttiin (mm:ss)
+    const calculateCountdown = () => {
+        const minutes = currentTime.getMinutes();
+        const seconds = currentTime.getSeconds();
+
+        const nextQuarterMinute = (Math.floor(minutes / 15) + 1) * 15;
+        let diffMinutes = nextQuarterMinute - minutes - 1;
+        let diffSeconds = 60 - seconds;
+
+        if (diffSeconds === 60) {
+            diffSeconds = 0;
+            diffMinutes += 1;
+        }
+
+        return `${String(diffMinutes).padStart(2, '0')}:${String(diffSeconds).padStart(2, '0')}`;
+    };
 
     if (error) return <div className="error-message">Virhe: {error}</div>;
 
@@ -89,7 +110,7 @@ const App = () => {
                     <h1 className="title">
                         <span>⚡ Sähkön hinta tänään</span>
                         <span className="current-price">
-                            NYT: {currentPrice ? `${currentPrice.toFixed(2)} c/kWh` : '--'}
+                            NYT: {currentPrice ? `${currentPrice.toFixed(2)} c/kWh (${calculateCountdown()})` : '--'}
                         </span>
                         <span className="max-price">
                             KALLEIN: {maxPrice ? `${maxPrice.toFixed(2)} c/kWh` : '--'}
@@ -103,7 +124,7 @@ const App = () => {
                             <ComposedChart
                                 data={prices}
                                 barCategoryGap={'3%'}
-                                margin={{ left: 0, right: 0, top: 15 }}
+                                margin={{ left: 0, right: 0, top: 20 }}
                             >
                                 <CartesianGrid
                                     strokeDasharray="0"
@@ -168,7 +189,7 @@ const App = () => {
                                     x={nowKey}
                                     stroke="#ef4444"
                                     strokeWidth={3}
-                                    label={{ fontSize: '13px', value: 'NYT', fill: '#ef4444', position: 'top', fontWeight: 'bold' }}
+                                    label={{ fontSize: '11px', value: 'NYT', fill: '#ef4444', position: 'top', fontWeight: 'bold', offset: 8 }}
                                 />
                                 <Bar dataKey="price" isAnimationActive={false}>
                                     {prices.map((entry) => (
