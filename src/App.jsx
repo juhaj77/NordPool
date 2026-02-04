@@ -17,23 +17,21 @@ const App = () => {
                 {/* Välilehtivalinta kortin yläpuolella */}
                 <div className="tab-navigation" style={{
                     display: 'flex',
-                    gap: '12px',
-                    marginBottom: '12px',
-                    marginLeft: '4px'
+                    gap: '9px',
+                    marginBottom: '0',
+                    marginLeft: '0'
                 }}>
                     <button
                         onClick={() => setTab('current')}
                         style={{
-                            padding: '10px 24px',
+                            padding: '5px 24px',
                             fontSize: '14px',
                             fontWeight: '700',
-                            borderRadius: '10px 10px 10px 10px',
+                            borderRadius: '10px 10px 0px 0px',
                             border: 'none',
                             cursor: 'pointer',
-                            backgroundColor: tab === 'current' ? '#ffffff' : 'transparent',
+                            backgroundColor: tab === 'current' ? '#ffffff' : '#dee4ef',
                             color: tab === 'current' ? '#3365ba' : '#64748b',
-                            boxShadow: tab === 'current' ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
-                            transition: 'all 0.2s'
                         }}
                     >
                         ⚡ Live-hinnat
@@ -41,16 +39,14 @@ const App = () => {
                     <button
                         onClick={() => setTab('tomorrow')}
                         style={{
-                            padding: '10px 24px',
+                            padding: '5px 24px',
                             fontSize: '14px',
                             fontWeight: '700',
-                            borderRadius: '10px 10px 10px 10px',
+                            borderRadius: '10px 10px 0px 0px',
                             border: 'none',
                             cursor: 'pointer',
-                            backgroundColor: tab === 'tomorrow' ? '#ffffff' : 'transparent',
+                            backgroundColor: tab === 'tomorrow' ? '#ffffff' : '#dee4ef',
                             color: tab === 'tomorrow' ? '#3365ba' : '#64748b',
-                            boxShadow: tab === 'tomorrow' ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
-                            transition: 'all 0.2s'
                         }}
                     >
                         ⚡ Huomenna
@@ -58,16 +54,14 @@ const App = () => {
                     <button
                         onClick={() => setTab('statistics')}
                         style={{
-                            padding: '10px 24px',
+                            padding: '5px 24px',
                             fontSize: '14px',
                             fontWeight: '700',
-                            borderRadius: '10px 10px 10px 10px',
+                            borderRadius: '10px 10px 0px 0px',
                             border: 'none',
                             cursor: 'pointer',
-                            backgroundColor: tab === 'statistics' ? '#ffffff' : 'transparent',
+                            backgroundColor: tab === 'statistics' ? '#ffffff' : '#dee4ef',
                             color: tab === 'statistics' ? '#3365ba' : '#64748b',
-                            boxShadow: tab === 'statistics' ? '0 4px 6px -1px rgb(0 0 0 / 0.1)' : 'none',
-                            transition: 'all 0.2s'
                         }}
                     >
                         📊 Tilastot
