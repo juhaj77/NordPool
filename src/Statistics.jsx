@@ -188,15 +188,35 @@ const Statistics = () => {
                             />
 
                             {daysToFetch > 1 && (
-                                <Area type="monotone" dataKey="stdRange" fill="#cbd5e1" stroke="none" name="stdRange" isAnimationActive={false} />
+                                <Area
+                                    type="monotone"
+                                    dataKey="stdRange"
+                                    fill="#cbd5e1"
+                                    stroke="none"
+                                    name="stdRange"
+                                    isAnimationActive={false} />
                             )}
 
                             {daysToFetch === 1 && (
-                                <Line type="stepAfter" dataKey="currentDayPrice" stroke="#3365ba" strokeWidth={3} dot={false} name="currentDayPrice" />
+                                <Line
+                                    type="stepAfter"
+                                    dataKey="currentDayPrice"
+                                    stroke="#3365ba"
+                                    strokeWidth={3}
+                                    dot={false}
+                                    name="currentDayPrice"
+                                    isAnimationActive={false} />
                             )}
 
                             {daysToFetch > 1 && (
-                                <Line type="monotone" dataKey="avg" stroke="#1e293b" strokeWidth={2} dot={false} name="avg" />
+                                <Line
+                                    type="monotone"
+                                    dataKey="avg"
+                                    stroke="#1e293b"
+                                    strokeWidth={2}
+                                    dot={false}
+                                    name="avg"
+                                    isAnimationActive={false} />
                             )}
 
                             <ReferenceLine x={nowKey} stroke="#ef4444" strokeWidth={2} label={{ value: 'NYT', position: 'top', fill: '#ef4444', fontSize: 10 }} />
