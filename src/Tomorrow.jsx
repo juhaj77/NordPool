@@ -70,7 +70,7 @@ const Tomorrow = () => {
 
     if (!loading && prices.length === 0) {
         return (
-            <div className="card" style={cardStyle}>
+            <div className="card">
                 <div className="header">
                     <h1 className="title">⚡ Sähkön hinta huomenna</h1>
                 </div>
@@ -82,7 +82,7 @@ const Tomorrow = () => {
     }
 
     return (
-        <div className="card" style={cardStyle}>
+        <div className="card">
             <div className="header">
                 <h1 className="title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <span>⚡ Sähkön hinta huomenna</span>
