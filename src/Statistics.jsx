@@ -11,6 +11,9 @@ import {
     ReferenceLine
 } from 'recharts';
 
+// Tuodaan keskihajonnan ikoni assets-kansiosta
+import stdIcon from '../assets/population_standard_deviation.svg';
+
 const Statistics = () => {
     const [rawPrices, setRawPrices] = useState([]);
     const [daysToFetch, setDaysToFetch] = useState(1);
@@ -99,20 +102,35 @@ const Statistics = () => {
             <div className="header" style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center', // Keskittää molemmat elementit pystysuunnassa
+                alignItems: 'center',
                 marginBottom: '20px'
             }}>
-                <h1 className="title" style={{ margin: 0 }}>
-                    ⚡ {daysToFetch > 1 ? `${daysToFetch} pv keskiarvo & keskihajonta` : 'Sähkön hinta tänään'}
+                <h1 className="title" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+                    <div>
+                    <span>
+                        ⚡ {daysToFetch > 1 ? `${daysToFetch} pv keskiarvo & keskihajonta` : 'Sähkön hinta tänään'}
+                    </span>
+                    {daysToFetch > 1 && (
+                        <img
+                            src={stdIcon}
+                            alt="Standard Deviation"
+                            style={{
+                                height: '3rem',
+                                marginLeft: '30px',
+                                verticalAlign: 'middle'
+                            }}
+                        />
+                    )}
+                    </div>
                 </h1>
 
                 <div className="controls" style={{
                     display: 'flex',
-                    alignItems: 'center', // Keskittää tekstin ja selectin keskenään
+                    alignItems: 'center',
                     gap: '12px'
                 }}>
                     <label style={{
-                        fontSize: '1.25rem', // Vastaa h1-kokoa (usein n. 20-24px)
+                        fontSize: '1.25rem',
                         fontWeight: '700',
                         color: '#1e293b'
                     }}>
@@ -122,7 +140,7 @@ const Statistics = () => {
                         value={daysToFetch}
                         onChange={(e) => setDaysToFetch(Number(e.target.value))}
                         style={{
-                            fontSize: '1.25rem', // Sama fonttikoko kuin tekstillä
+                            fontSize: '1.25rem',
                             fontWeight: '700',
                             color: '#3365ba',
                             padding: '4px 8px',
@@ -156,7 +174,6 @@ const Statistics = () => {
                             <YAxis tick={{fontSize: 11, fill: '#64748b'}} tickFormatter={(v) => v.toFixed(0)} />
                             <Tooltip
                                 labelFormatter={(label) => `Klo ${label}`}
-                                // KORJATTU FORMATTER: haetaan stdDev suoraan aktiivisen pisteen payloadista
                                 formatter={(value, name, props) => {
                                     if (name === "stdRange") {
                                         const stdValue = props.payload.stdDev;
