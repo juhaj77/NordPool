@@ -1,12 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
-/* 1. PERUSNOLLAUS - Poistaa scrollbarit ja oletusmarginaalit */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden; /* Estää sivun rullauksen */
+  overflow: hidden;
   font-family: 'Funnel Sans', sans-serif;
 }
 
@@ -14,32 +13,57 @@ html, body {
   height: 100%;
   width: 100%;
 }
+.content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.tab-navigation {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1em;
+  margin-left: 0;
+}
+.tab-navigation button {
+  padding: 5px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.no-tomorrow {
+  padding: 60px 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
 
-/* 2. SIVUN TAUSTA JA KORTIN KESKITYS */
 .app-root {
   background-color: #f1f5f9;
   height: 100vh;
   width: 100vw;
-  display: flex;          /* Aktivoi flex-keskityksen */
-  justify-content: center; /* Keskittää vaakasuunnassa */
-  align-items: center;     /* Keskittää pystysuunnassa */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* 3. KORTTI */
 .card {
   background-color: #ffffff;
-  width: 80vw;             /* Leveys pienillä näytöillä */
-  max-width: 1400px;      /* Maksimileveys */
-  height: 80vh;           /* Korkeus suhteessa ruutuun */
+  width: 80vw;
+  max-width: 1400px;
+  height: 80vh;
   padding: 25px;
   border-radius:12px;
   box-shadow: 0 0 20px rgba(0, 0, 50, 0.1);
   display: flex;
   flex-direction: column;
-  box-sizing: border-box; /* Pitää paddingin kortin sisällä */
+  box-sizing: border-box;
 }
 
-/* 4. OTSIKKORIVI */
 .header {
   margin-bottom: 20px;
 }
@@ -53,8 +77,30 @@ html, body {
   font-size: 1.4rem;
   color: #1e293b;
 }
+.statistics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.statistics-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.select {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #3365ba;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  background-color: #ffffff;
+  cursor: pointer;
+}
 
-/* Otsikon dynaamiset osat */
 .current-price {
   font-size: 0.95rem;
   font-weight: 600;
@@ -70,14 +116,12 @@ html, body {
   color: #475569;
 }
 
-/* 5. KAAVIOALUE */
 .chart-container {
-  flex: 1;                /* Täyttää kortin loppuosan */
+  flex: 1;
   width: 100%;
-  min-height: 0;          /* Tärkeä: mahdollistaa kaavion kutistumisen */
+  min-height: 0;
 }
 
-/* 6. MUUT ELEMENTIT */
 .loading {
   display: flex;
   justify-content: center;
@@ -93,14 +137,31 @@ html, body {
   text-align: center;
 }
 
-/* Recharts Tooltip korjaus */
 .recharts-default-tooltip {
   border-radius: 8px !important;
   border: none !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+ }
+.label{
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+.span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.img {
+  height: 2em;
+  vertical-align: middle;
+}
 
-/* 7. MOBIILISOVITUS */
 @media (max-width: 768px) {
   .header .title {
     flex-direction: column;

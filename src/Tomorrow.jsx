@@ -29,7 +29,6 @@ const Tomorrow = () => {
 
         const isLocal = window.location.hostname === 'localhost';
         const proxyPath = isLocal ? '/api' : '/api-proxy';
-        // Käytetään täsmälleen samaa URL-rakennetta kuin CurrentDay
         const url = `${proxyPath}/api/vartti/v1/halpa?vartit=96&tulos=sarja&aikaraja=${pvm}`;
 
         try {
@@ -63,18 +62,13 @@ const Tomorrow = () => {
 
     const maxPrice = prices.length > 0 ? Math.max(...prices.map(p => p.price)) : 0;
 
-    // Pehmeä alpha 0.3 varjo oikealle alas
-    const cardStyle = {
-        boxShadow: '10px 10px 20px rgba(0, 0, 0, 0.3)',
-    };
-
     if (!loading && prices.length === 0) {
         return (
             <div className="card">
                 <div className="header">
                     <h1 className="title">⚡ Sähkön hinta huomenna</h1>
                 </div>
-                <div style={{ padding: '60px 20px', textAlign: 'center', color: '#64748b', fontSize: '1.2rem', fontWeight: '600' }}>
+                <div className="no-tomorrow">
                     Huomisen dataa ei ole vielä julkaistu.
                 </div>
             </div>
@@ -109,7 +103,7 @@ const Tomorrow = () => {
                             <XAxis
                                 dataKey="time"
                                 interval={3}
-                                scale="band" // Tämä ja tickPlacement pitävät palkit kohdallaan
+                                scale="band"
                                 tickPlacement="on"
                                 padding={{ left: 0, right: 0 }}
                                 tickFormatter={(time) => parseInt(time.split(':')[0], 10).toString()}
@@ -159,7 +153,6 @@ const Tomorrow = () => {
                                 }}
                                 formatter={(value) => [`${value.toFixed(2)} c/kWh`, 'Hinta']}
                             />
-                            {/* Kaikki palkit sinisiä, ei punaista korostusta */}
                             <Bar dataKey="price" fill="#3365ba" isAnimationActive={false} />
                         </ComposedChart>
                     </ResponsiveContainer>

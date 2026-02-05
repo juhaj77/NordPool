@@ -11,7 +11,6 @@ import {
     ReferenceLine
 } from 'recharts';
 
-// Tuodaan keskihajonnan ikoni assets-kansiosta
 import stdIcon from '../assets/population_standard_deviation.svg';
 
 const Statistics = () => {
@@ -99,50 +98,29 @@ const Statistics = () => {
 
     return (
         <div className="card">
-            <div className="header" style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '20px'
-            }}>
-                <h1 className="title" style={{ margin: 0, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                    <div>
+            <div className="statistics-header">
+                <h1 className="statistics-title">
+                    <div className="label">
                     <span>⚡ {daysToFetch > 1 ? `${daysToFetch} pv keskiarvo & ` : 'Sähkön hinta tänään'}</span>
                     {daysToFetch > 1 && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                        <span className="span">
                             keskihajonta
                             <img
+                                className="img"
                                 src={stdIcon}
                                 alt="Standard Deviation"
-                                style={{
-                                    height: '2em',
-                                    verticalAlign: 'middle'
-                                }}
                             />
                         </span>
                     )}
                     </div>
                 </h1>
 
-                <div className="controls" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px'
-                }}>
-                    <label style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>Päivät:</label>
+                <div className="controls">
+                    <label className="label">Päivät:</label>
                     <select
+                        className="select"
                         value={daysToFetch}
                         onChange={(e) => setDaysToFetch(Number(e.target.value))}
-                        style={{
-                            fontSize: '1.25rem',
-                            fontWeight: '700',
-                            color: '#3365ba',
-                            padding: '4px 8px',
-                            borderRadius: '8px',
-                            border: '2px solid #e2e8f0',
-                            backgroundColor: '#ffffff',
-                            cursor: 'pointer'
-                        }}
                     >
                         {[1, 2, 3, 7, 14, 30].map(v => <option key={v} value={v}>{v}</option>)}
                     </select>
@@ -164,7 +142,6 @@ const Statistics = () => {
 
                             <Tooltip
                                 labelFormatter={(label) => `Klo ${label}`}
-                                // TUMMENNUS TÄSSÄ:
                                 contentStyle={{
                                     borderRadius: '10px',
                                     border: 'none',

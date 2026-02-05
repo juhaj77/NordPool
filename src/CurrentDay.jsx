@@ -57,12 +57,10 @@ const CurrentDay = () => {
         fetchPrices(true);
     }, []);
 
-    // Päivitetään kello sekunnin välein laskuria varten
     useEffect(() => {
         const interval = setInterval(() => {
             const now = new Date();
 
-            // Jos minuutti vaihtuu, tarkistetaan vuorokauden vaihdos datan hakua varten
             if (now.getSeconds() === 0) {
                 setCurrentTime(prevTime => {
                     if (now.getDate() !== prevTime.getDate()) {
@@ -78,10 +76,8 @@ const CurrentDay = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Lasketaan nykyinen 15min jakso (avain kaaviolle)
     const nowKey = `${String(currentTime.getHours()).padStart(2, '0')}:${String(Math.floor(currentTime.getMinutes() / 15) * 15).padStart(2, '0')}`;
 
-    // Lasketaan jäljellä oleva aika seuraavaan varttiin (mm:ss)
     const calculateCountdown = () => {
         const minutes = currentTime.getMinutes();
         const seconds = currentTime.getSeconds();
