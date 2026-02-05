@@ -106,7 +106,12 @@ const CurrentDay = () => {
                     <h1 className="title">
                         <span>⚡ Sähkön hinta tänään</span>
                         <span className="current-price">
-                            NYT: {currentPrice ? `${currentPrice.toFixed(2)} c/kWh (${calculateCountdown()})` : '--'}
+                            NYT: {currentPrice ? (
+                            <>
+                                <span style={{ color: 'black' }}>{currentPrice.toFixed(2)}</span> c/kWh
+                                (<span style={{ color: 'black' }}>{calculateCountdown()}</span>)
+                            </>
+                        ) : '--'}
                         </span>
                         <span className="max-price">
                             KALLEIN: {maxPrice ? `${maxPrice.toFixed(2)} c/kWh` : '--'}
