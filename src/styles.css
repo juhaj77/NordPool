@@ -91,7 +91,7 @@ html, body {
   gap: 8px;
 }
 .select {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #3365ba;
   padding: 4px 8px;
@@ -148,7 +148,7 @@ html, body {
   gap: 12px;
  }
 .label{
-  font-size: 1.4rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1e293b;
 }
