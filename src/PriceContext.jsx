@@ -282,22 +282,46 @@ export const PriceProvider = ({ children }) => {
         }
 
         const nowSlot = slotKey(new Date());
-        const upcoming = prices.filter(p => p.time >= nowSlot && p.price > alertThreshold);
+        const futurePrices = prices.filter(p => p.time >= nowSlot);
+
+        // Etsi siirtymäkohdat: alle→yli ja yli→alle.
+        // Alkutila: mikä oli hinta juuri ennen nykyistä varttia?
+        const lastBefore = [...prices].reverse().find(p => p.time < nowSlot);
+        let wasOver = lastBefore ? lastBefore.price > alertThreshold : false;
+
+        const events = [];
+        for (const slot of futurePrices) {
+            const isOver = slot.price > alertThreshold;
+            if (isOver && !wasOver) {
+                events.push({
+                    time: slot.time,
+                    summary: `⚡ Sähkö ${slot.price.toFixed(2)} c/kWh – yli rajan`,
+                    description: `Hinta ylitti rajan ${alertThreshold.toFixed(1)} c/kWh kello ${slot.time}. Harkitse sähkönsyöppöjen laitteiden sammuttamista.`,
+                });
+            } else if (!isOver && wasOver) {
+                events.push({
+                    time: slot.time,
+                    summary: `✅ Sähkö taas alle rajan: ${slot.price.toFixed(2)} c/kWh`,
+                    description: `Hinta laski alle rajan ${alertThreshold.toFixed(1)} c/kWh kello ${slot.time}. Voit kytkeä laitteet takaisin päälle.`,
+                });
+            }
+            wasOver = isOver;
+        }
 
         setSaving(true);
         setSavedCount(null);
 
         let count = 0;
-        for (const slot of upcoming) {
+        for (const ev of events) {
             try {
-                const [h, m] = slot.time.split(':').map(Number);
+                const [h, m] = ev.time.split(':').map(Number);
                 const start = new Date();
                 start.setHours(h, m, 0, 0);
-                const end = new Date(start.getTime() + 5 * 60_000); // 5 min → ilmoitus katoaa
+                const end = new Date(start.getTime() + 5 * 60_000);
 
                 const body = {
-                    summary: `⚡ Sähkö ${slot.price.toFixed(2)} c/kWh – yli rajan`,
-                    description: `Hinta ${slot.price.toFixed(2)} c/kWh ylittää rajan ${alertThreshold.toFixed(1)} c/kWh kello ${slot.time}.`,
+                    summary: ev.summary,
+                    description: ev.description,
                     start: { dateTime: start.toISOString() },
                     end: { dateTime: end.toISOString() },
                     reminders: {
