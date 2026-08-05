@@ -266,6 +266,68 @@ export const PriceProvider = ({ children }) => {
         }
     }, [alertEnabled, googleAuthed, currentPrice, nowKey]);
 
+    // ── Offline-hälytykset: luo valmiit kalenteritapahtumat kaikille
+    //    päivän tuleville ylityksille kerralla ─────────────────────────────────
+
+    const [saving, setSaving] = useState(false);
+    const [savedCount, setSavedCount] = useState(null); // null = ei vielä painettu
+
+    const saveUpcomingAlertsToCalendar = async () => {
+        const token = getValidToken();
+        if (!token) {
+            setGoogleError(googleAuthed
+                ? 'Google-token vanhentunut. Ota hälytykset uudelleen käyttöön.'
+                : 'Kirjaudu Google-tilille ensin ottamalla hälytykset käyttöön.');
+            return;
+        }
+
+        const nowSlot = slotKey(new Date());
+        const upcoming = prices.filter(p => p.time >= nowSlot && p.price > alertThreshold);
+
+        setSaving(true);
+        setSavedCount(null);
+
+        let count = 0;
+        for (const slot of upcoming) {
+            try {
+                const [h, m] = slot.time.split(':').map(Number);
+                const start = new Date();
+                start.setHours(h, m, 0, 0);
+                const end = new Date(start.getTime() + 5 * 60_000); // 5 min → ilmoitus katoaa
+
+                const body = {
+                    summary: `⚡ Sähkö ${slot.price.toFixed(2)} c/kWh – yli rajan`,
+                    description: `Hinta ${slot.price.toFixed(2)} c/kWh ylittää rajan ${alertThreshold.toFixed(1)} c/kWh kello ${slot.time}.`,
+                    start: { dateTime: start.toISOString() },
+                    end: { dateTime: end.toISOString() },
+                    reminders: {
+                        useDefault: false,
+                        overrides: [{ method: 'popup', minutes: 0 }],
+                    },
+                };
+
+                const res = await fetch(
+                    'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+                    {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(body),
+                    }
+                );
+                if (res.ok) count++;
+                else console.error('Kalenteritapahtuma epäonnistui:', await res.text());
+            } catch (e) {
+                console.error('Kalenteritapahtuma epäonnistui:', e);
+            }
+        }
+
+        setSaving(false);
+        setSavedCount(count);
+    };
+
     const value = {
         prices,
         loading,
@@ -278,9 +340,12 @@ export const PriceProvider = ({ children }) => {
         isOverThreshold,
         googleAuthed,
         googleError,
+        saving,
+        savedCount,
         setAlertThreshold,
         enableAlert,
         disableAlert,
+        saveUpcomingAlertsToCalendar,
     };
 
     return <PriceContext.Provider value={value}>{children}</PriceContext.Provider>;

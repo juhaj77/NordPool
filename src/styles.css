@@ -118,6 +118,28 @@ html, body {
   font-style: italic;
 }
 
+.save-offline-btn {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #3365ba;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.save-offline-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.save-offline-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .alert-google-badge {
   font-size: 0.85rem;
   font-weight: 700;

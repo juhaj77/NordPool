@@ -95,9 +95,12 @@ const CurrentDay = () => {
         isOverThreshold,
         googleAuthed,
         googleError,
+        saving,
+        savedCount,
         setAlertThreshold,
         enableAlert,
         disableAlert,
+        saveUpcomingAlertsToCalendar,
     } = usePrices();
 
     const calculateCountdown = () => {
@@ -171,6 +174,25 @@ const CurrentDay = () => {
                             Raja: <strong>{alertThreshold.toFixed(1)} c/kWh</strong>
                             <button type="button" onClick={() => adjustThreshold(-0.5)} aria-label="Vähennä">–</button>
                             <button type="button" onClick={() => adjustThreshold(0.5)} aria-label="Lisää">+</button>
+                        </span>
+                    )}
+
+                    {alertEnabled && googleAuthed && (
+                        <button
+                            type="button"
+                            className="save-offline-btn"
+                            onClick={saveUpcomingAlertsToCalendar}
+                            disabled={saving}
+                        >
+                            {saving ? 'Tallennetaan...' : '📅 Tallenna hälytykset kalenteriin'}
+                        </button>
+                    )}
+
+                    {savedCount !== null && !saving && (
+                        <span className={savedCount > 0 ? 'alert-google-badge' : 'alert-hint'}>
+                            {savedCount > 0
+                                ? `✓ ${savedCount} hälytystä tallennettu`
+                                : 'Ei tulevia ylityksiä tänään'}
                         </span>
                     )}
 
