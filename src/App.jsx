@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import CurrentDay from './CurrentDay';
 import Statistics from './Statistics';
 import Tomorrow from './Tomorrow';
+import { PriceProvider } from './PriceContext';
 
 const App = () => {
     const [tab, setTab] = useState('current');
 
     return (
+        <PriceProvider>
         <div className="app-root">
             <div className="content">
                 <div className="tab-navigation">
@@ -48,6 +50,7 @@ const App = () => {
                 </main>
             </div>
         </div>
+        </PriceProvider>
     );
 }
 
