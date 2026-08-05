@@ -178,9 +178,15 @@ export const PriceProvider = ({ children }) => {
         return null;
     };
 
-    // Kutsutaan kytkintä painettaessa (on käyttäjän ele → popup sallittu)
+    // Kutsutaan kytkintä painettaessa (on käyttäjän ele → molemmat luvat sallittu)
     const enableAlert = () => {
         setGoogleError(null);
+
+        // Pyydetään browser-notifikaatiolupa samalla eleellä
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
         const client = tokenClientRef.current ?? initTokenClient();
         if (!client) return;
 
@@ -214,14 +220,27 @@ export const PriceProvider = ({ children }) => {
             if (lastNotifiedSlotRef.current !== nowKey) {
                 lastNotifiedSlotRef.current = nowKey;
 
+                const notifBody = `Hinta nyt ${currentPrice.toFixed(2)} c/kWh – yli rajan ${alertThresholdRef.current.toFixed(1)} c/kWh`;
+
+                // 1) Browser-notifikaatio (toimii myös muilla välilehdillä)
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    try {
+                        new Notification('⚡ Sähkön hintahälytys', {
+                            body: notifBody,
+                            tag: 'nordpool-price-alert',
+                            renotify: true,
+                        });
+                    } catch (e) {
+                        console.warn('Browser-ilmoitus epäonnistui:', e);
+                    }
+                }
+
+                // 2) Google Kalenteri -tapahtuma (push-notifikaatio puhelimeen)
                 const token = getValidToken();
                 if (token) {
                     postCalendarEvent(token, currentPrice, alertThresholdRef.current)
                         .catch(err => console.error('Kalenteritapahtuma epäonnistui:', err));
                 } else if (googleAuthed) {
-                    // Token vanhentunut – pyydetään uusi hiljaisesti.
-                    // Uusi token tulee callbackin kautta, mutta se vaatii
-                    // käyttäjäeleyn eli näytetään toast UI:ssä.
                     setGoogleError('Google-token vanhentunut. Avaa hälytykset uudelleen.');
                     setGoogleAuthed(false);
                     setAlertEnabled(false);
