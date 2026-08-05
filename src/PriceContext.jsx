@@ -22,14 +22,14 @@ const slotKey = (date) =>
 
 // Luo Google Calendar -tapahtuman Bearer-tokenilla.
 // Tapahtuma alkaa nyt, kesto 15 min. Popup-muistutus 0 min päässä = heti.
-const postCalendarEvent = async (token, price, threshold) => {
+const postCalendarEvent = async (token, summary, description) => {
     const now = new Date();
     const end = new Date(now.getTime() + 15 * 60_000);
     const fmt = (d) => d.toISOString();
 
     const body = {
-        summary: `⚡ Sähkö ${price.toFixed(2)} c/kWh – yli rajan`,
-        description: `Nykyhinta ${price.toFixed(2)} c/kWh ylittää asettamasi rajan ${threshold.toFixed(1)} c/kWh.`,
+        summary,
+        description,
         start: { dateTime: fmt(now) },
         end: { dateTime: fmt(end) },
         reminders: {
@@ -77,6 +77,8 @@ export const PriceProvider = ({ children }) => {
 
     const lastFetchedDateRef = useRef(new Date().getDate());
     const lastNotifiedSlotRef = useRef(null);
+    // true kun olemme jo ilmoittaneet hinnan olevan yli rajan; false kun alle
+    const wasOverRef = useRef(false);
 
     // Synkronoi ref ja localStorage kun threshold muuttuu
     useEffect(() => {
@@ -205,6 +207,7 @@ export const PriceProvider = ({ children }) => {
         setGoogleAuthed(false);
         googleTokenRef.current = null;
         lastNotifiedSlotRef.current = null;
+        wasOverRef.current = false;
     };
 
     // ── Hälytysseuranta ──────────────────────────────────────────────────────
@@ -213,42 +216,52 @@ export const PriceProvider = ({ children }) => {
     const currentPrice = prices.find(p => p.time === nowKey)?.price ?? null;
     const isOverThreshold = alertEnabled && currentPrice != null && currentPrice > alertThreshold;
 
+    const fireNotifications = (title, body, tag) => {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+                new Notification(title, { body, tag, renotify: true });
+            } catch (e) {
+                console.warn('Browser-ilmoitus epäonnistui:', e);
+            }
+        }
+
+        const token = getValidToken();
+        if (token) {
+            postCalendarEvent(token, title, body)
+                .catch(err => console.error('Kalenteritapahtuma epäonnistui:', err));
+        } else if (googleAuthed) {
+            setGoogleError('Google-token vanhentunut. Avaa hälytykset uudelleen.');
+            setGoogleAuthed(false);
+            setAlertEnabled(false);
+        }
+    };
+
     useEffect(() => {
         if (!alertEnabled || currentPrice == null) return;
 
-        if (currentPrice > alertThresholdRef.current) {
+        const threshold = alertThresholdRef.current;
+
+        if (currentPrice > threshold) {
+            // Ilmoitetaan vain kerran per vartti kun mennään yli
             if (lastNotifiedSlotRef.current !== nowKey) {
                 lastNotifiedSlotRef.current = nowKey;
-
-                const notifBody = `Hinta nyt ${currentPrice.toFixed(2)} c/kWh – yli rajan ${alertThresholdRef.current.toFixed(1)} c/kWh`;
-
-                // 1) Browser-notifikaatio (toimii myös muilla välilehdillä)
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    try {
-                        new Notification('⚡ Sähkön hintahälytys', {
-                            body: notifBody,
-                            tag: 'nordpool-price-alert',
-                            renotify: true,
-                        });
-                    } catch (e) {
-                        console.warn('Browser-ilmoitus epäonnistui:', e);
-                    }
-                }
-
-                // 2) Google Kalenteri -tapahtuma (push-notifikaatio puhelimeen)
-                const token = getValidToken();
-                if (token) {
-                    postCalendarEvent(token, currentPrice, alertThresholdRef.current)
-                        .catch(err => console.error('Kalenteritapahtuma epäonnistui:', err));
-                } else if (googleAuthed) {
-                    setGoogleError('Google-token vanhentunut. Avaa hälytykset uudelleen.');
-                    setGoogleAuthed(false);
-                    setAlertEnabled(false);
-                }
+                wasOverRef.current = true;
+                fireNotifications(
+                    `⚡ Sähkö kallistui: ${currentPrice.toFixed(2)} c/kWh`,
+                    `Hinta ylitti rajan ${threshold.toFixed(1)} c/kWh. Harkitse sähkönsyöppöjen laitteiden sammuttamista.`,
+                    'nordpool-over'
+                );
             }
         } else {
-            if (lastNotifiedSlotRef.current === nowKey) {
+            // Ilmoitetaan kerran kun hinta palaa rajan alle
+            if (wasOverRef.current) {
+                wasOverRef.current = false;
                 lastNotifiedSlotRef.current = null;
+                fireNotifications(
+                    `✅ Sähkö taas alle rajan: ${currentPrice.toFixed(2)} c/kWh`,
+                    `Hinta laski alle rajan ${threshold.toFixed(1)} c/kWh. Voit kytkeä laitteet takaisin päälle.`,
+                    'nordpool-under'
+                );
             }
         }
     }, [alertEnabled, googleAuthed, currentPrice, nowKey]);
