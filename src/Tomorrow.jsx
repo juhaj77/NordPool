@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
     ComposedChart,
     Bar,
@@ -9,71 +8,39 @@ import {
     ResponsiveContainer,
     Cell
 } from 'recharts';
+import { usePrices } from './PriceContext';
+import DraggableThreshold from './DraggableThreshold';
 
 const Tomorrow = () => {
-    const [prices, setPrices] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    const ALV = 1.255;
-
-    const fetchPrices = async (isInitial = false) => {
-        if (isInitial) setLoading(true);
-
-        const d = new Date();
-        d.setDate(d.getDate() + 1); // Huominen
-        const vuosi = d.getFullYear();
-        const kuukausi = String(d.getMonth() + 1).padStart(2, '0');
-        const paiva = String(d.getDate()).padStart(2, '0');
-        const pvm = `${vuosi}-${kuukausi}-${paiva}`;
-
-        const isLocal = window.location.hostname === 'localhost';
-        const proxyPath = isLocal ? '/api' : '/api-proxy';
-        const url = `${proxyPath}/api/vartti/v1/halpa?vartit=96&tulos=sarja&aikaraja=${pvm}`;
-
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Virhe: ${response.status}`);
-            const data = await response.json();
-
-            if (!data || data.length === 0) {
-                setPrices([]);
-            } else {
-                const formattedData = data.map(item => ({
-                    time: item.aikaleima_suomi.includes('T')
-                        ? item.aikaleima_suomi.split('T')[1].substring(0, 5)
-                        : item.aikaleima_suomi.split(' ')[1].substring(0, 5),
-                    price: parseFloat(item.hinta) * ALV,
-                }));
-
-                setPrices(formattedData.sort((a, b) => a.time.localeCompare(b.time)));
-            }
-            setError(null);
-        } catch (err) {
-            setError("Hintoja ei saatu ladattua.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchPrices(true);
-    }, []);
+    const {
+        tomorrowPrices: prices,
+        tomorrowLoading: loading,
+        tomorrowAlertEnabled: alertEnabled,
+        tomorrowAlertThreshold: alertThreshold,
+        googleAuthed,
+        googleError,
+        tomorrowSaving: saving,
+        tomorrowSavedCount: savedCount,
+        setTomorrowAlertThreshold: setAlertThreshold,
+        enableTomorrowAlert: enableAlert,
+        disableTomorrowAlert: disableAlert,
+        saveTomorrowAlertsToCalendar,
+    } = usePrices();
 
     const maxPrice = prices.length > 0 ? Math.max(...prices.map(p => p.price)) : 0;
+    // Kiinteä Y-akselin yläraja pitää viivan ja pylväiden skaalan samana
+    const yMax = Math.max(1, Math.ceil(maxPrice * 1.1));
 
-    if (!loading && prices.length === 0) {
-        return (
-            <div className="card">
-                <div className="header">
-                    <h1 className="title">⚡ Sähkön hinta huomenna</h1>
-                </div>
-                <div className="no-tomorrow">
-                    Huomisen dataa ei ole vielä julkaistu.
-                </div>
-            </div>
-        );
-    }
+    const barColor = (entry) => {
+        if (alertEnabled && entry.price > alertThreshold) return '#f59e0b';
+        return '#3365ba';
+    };
+
+    const adjustThreshold = (delta) => {
+        setAlertThreshold(Math.max(0, Math.min(yMax, Math.round((alertThreshold + delta) * 10) / 10)));
+    };
+
+    const hasData = !loading && prices.length > 0;
 
     return (
         <div className="card">
@@ -84,10 +51,65 @@ const Tomorrow = () => {
                         KALLEIN: {maxPrice ? `${maxPrice.toFixed(2)} c/kWh` : '--'}
                     </span>
                 </h1>
+
+                <div className="alert-controls">
+                    <label className="switch">
+                        <input
+                            type="checkbox"
+                            checked={alertEnabled}
+                            onChange={(e) => (e.target.checked ? enableAlert() : disableAlert())}
+                        />
+                        <span className="slider" />
+                    </label>
+                    <span className="alert-label">Ennakkohälytys</span>
+
+                    {alertEnabled && googleAuthed && (
+                        <span className="alert-google-badge">📅 Google Kalenteri</span>
+                    )}
+
+                    {alertEnabled && (
+                        <span className="alert-value">
+                            Raja: <strong>{alertThreshold.toFixed(1)} c/kWh</strong>
+                            <button type="button" onClick={() => adjustThreshold(-0.5)} aria-label="Vähennä">–</button>
+                            <button type="button" onClick={() => adjustThreshold(0.5)} aria-label="Lisää">+</button>
+                        </span>
+                    )}
+
+                    {alertEnabled && googleAuthed && hasData && (
+                        <button
+                            type="button"
+                            className="save-offline-btn"
+                            onClick={saveTomorrowAlertsToCalendar}
+                            disabled={saving}
+                        >
+                            {saving ? 'Tallennetaan...' : '📅 Tallenna hälytykset kalenteriin'}
+                        </button>
+                    )}
+
+                    {savedCount !== null && !saving && (
+                        <span className={savedCount > 0 ? 'alert-google-badge' : 'alert-hint'}>
+                            {savedCount > 0
+                                ? `✓ ${savedCount} hälytystä tallennettu`
+                                : 'Ei ylityksiä huomiselle'}
+                        </span>
+                    )}
+
+                    {googleError && (
+                        <span className="alert-error">⚠ {googleError}</span>
+                    )}
+
+                    {alertEnabled && !googleError && (
+                        hasData
+                            ? <span className="alert-hint">Vedä keltaista viivaa säätääksesi rajaa</span>
+                            : <span className="alert-hint">Odotetaan huomisen hintojen julkaisua (n. klo 13–14)</span>
+                    )}
+                </div>
             </div>
 
             <div className="chart-container">
-                {!loading && prices.length > 0 ? (
+                {loading ? (
+                    <div className="loading">Ladataan hintoja...</div>
+                ) : hasData ? (
                     <ResponsiveContainer width="100%" height="100%" debounce={50}>
                         <ComposedChart
                             data={prices}
@@ -111,7 +133,8 @@ const Tomorrow = () => {
                                 stroke="#94a3b8"
                             />
                             <YAxis
-                                domain={[0, 'auto']}
+                                domain={alertEnabled ? [0, yMax] : [0, 'auto']}
+                                allowDataOverflow={alertEnabled}
                                 tickCount={12}
                                 tick={{ fontSize: 12, fontWeight: '600', fill: '#475569' }}
                                 tickFormatter={(val) => `${val.toFixed(0)}`}
@@ -153,11 +176,28 @@ const Tomorrow = () => {
                                 }}
                                 formatter={(value) => [`${value.toFixed(2)} c/kWh`, 'Hinta']}
                             />
-                            <Bar dataKey="price" fill="#3365ba" isAnimationActive={false} />
+                            <Bar dataKey="price" isAnimationActive={false}>
+                                {prices.map((entry) => (
+                                    <Cell
+                                        key={`cell-${entry.time}`}
+                                        fill={barColor(entry)}
+                                    />
+                                ))}
+                            </Bar>
+                            {alertEnabled && (
+                                <DraggableThreshold
+                                    threshold={alertThreshold}
+                                    yMax={yMax}
+                                    over={false}
+                                    onChange={setAlertThreshold}
+                                />
+                            )}
                         </ComposedChart>
                     </ResponsiveContainer>
                 ) : (
-                    <div className="loading">Ladataan hintoja...</div>
+                    <div className="no-tomorrow">
+                        Huomisen dataa ei ole vielä julkaistu.
+                    </div>
                 )}
             </div>
         </div>
