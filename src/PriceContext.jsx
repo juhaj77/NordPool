@@ -55,19 +55,20 @@ const requestDayPrices = async (date) => {
         .sort((a, b) => a.time.localeCompare(b.time));
 };
 
-// ── Varalähde huomisen hinnoille (porssisahkoa.fi) ─────────────────────────
-// Käytetään vain jos sahkohinta-api.fi ei vielä tarjoa huomisen dataa -
-// porssisahkoa.fi:llä on havaittu olevan nopeampi päivitysrytmi joinain
-// päivinä. HUOM: porssisahkoa.fi:n hinnat sisältävät jo ALV 25,5 %, joten
-// niitä EI kerrota ALV-vakiolla toisin kuin ensisijaisen lähteen hintoja.
-const buildBackupPricesUrl = () => {
+// ── Varalähde (porssisahkoa.fi) ─────────────────────────────────────────────
+// Käytetään jos sahkohinta-api.fi ei vastaa (esim. 429 - liikaa pyyntöjä)
+// tai ei vielä tarjoa kysyttyä päivää. mode=1 -> tämän päivän hinnat,
+// mode=2 -> huomisen hinnat. HUOM: porssisahkoa.fi:n hinnat sisältävät jo
+// ALV 25,5 %, joten niitä EI kerrota ALV-vakiolla toisin kuin ensisijaisen
+// lähteen hintoja.
+const buildBackupPricesUrl = (mode) => {
     const isLocal = window.location.hostname === 'localhost';
     const proxyPath = isLocal ? '/api2' : '/api-proxy2';
-    return `${proxyPath}/api/Prices/GetPrices?mode=2`;
+    return `${proxyPath}/api/Prices/GetPrices?mode=${mode}`;
 };
 
-const requestBackupTomorrowPrices = async (date) => {
-    const response = await fetch(buildBackupPricesUrl());
+const requestBackupDayPrices = async (date, mode) => {
+    const response = await fetch(buildBackupPricesUrl(mode));
     if (!response.ok) throw new Error(`Varalähteen virhe: ${response.status}`);
     const data = await response.json();
     const targetPvm = toPvm(date);
@@ -271,17 +272,32 @@ export const PriceProvider = ({ children }) => {
         const d = new Date();
         try {
             const formattedData = await requestDayPrices(d);
+            if (formattedData.length < MIN_FULL_DAY_SLOTS) {
+                throw new Error(`Ensisijainen lähde palautti vain osittaisen päivän (${formattedData.length} varttia)`);
+            }
             setPrices(formattedData);
             setError(null);
             provisionalRef.current = false;
             lastFetchedDateRef.current = d.getDate();
-        } catch (err) {
-            console.error('Hakuvirhe:', err);
-            // Jos meillä on jo (vaikka vain alustavaa) dataa näytettävänä,
-            // ei näytetä virheruutua koko näkymän päälle - yritetään
-            // taustalla uudelleen, kunnes haku onnistuu.
-            if (!hasDataRef.current) setError('Hintoja ei saatu ladattua.');
-            lastFetchedDateRef.current = null;
+        } catch (primaryErr) {
+            console.warn('Ensisijainen tämän päivän hintalähde epäonnistui, kokeillaan varalähdettä:', primaryErr);
+            try {
+                const backupData = await requestBackupDayPrices(d, 1);
+                if (backupData.length < MIN_FULL_DAY_SLOTS) {
+                    throw new Error(`Varalähde palautti vain osittaisen päivän (${backupData.length} varttia)`);
+                }
+                setPrices(backupData);
+                setError(null);
+                provisionalRef.current = false;
+                lastFetchedDateRef.current = d.getDate();
+            } catch (backupErr) {
+                console.error('Hakuvirhe (molemmat lähteet epäonnistuivat):', backupErr);
+                // Jos meillä on jo (vaikka vain alustavaa) dataa näytettävänä,
+                // ei näytetä virheruutua koko näkymän päälle - yritetään
+                // taustalla uudelleen, kunnes haku onnistuu.
+                if (!hasDataRef.current) setError('Hintoja ei saatu ladattua.');
+                lastFetchedDateRef.current = null;
+            }
         } finally {
             setLoading(false);
             isFetchingTodayRef.current = false;
@@ -307,7 +323,7 @@ export const PriceProvider = ({ children }) => {
         } catch (primaryErr) {
             console.warn('Ensisijainen huomisen hintalähde ei vielä vastannut, kokeillaan varalähdettä:', primaryErr);
             try {
-                const backupData = await requestBackupTomorrowPrices(d);
+                const backupData = await requestBackupDayPrices(d, 2);
                 if (backupData.length < MIN_FULL_DAY_SLOTS) {
                     throw new Error(`Varalähde palautti vain osittaisen päivän (${backupData.length} varttia)`);
                 }
