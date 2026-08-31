@@ -51,6 +51,38 @@ const requestDayPrices = async (date) => {
         .sort((a, b) => a.time.localeCompare(b.time));
 };
 
+// ── Varalähde huomisen hinnoille (porssisahkoa.fi) ─────────────────────────
+// Käytetään vain jos sahkohinta-api.fi ei vielä tarjoa huomisen dataa -
+// porssisahkoa.fi:llä on havaittu olevan nopeampi päivitysrytmi joinain
+// päivinä. HUOM: porssisahkoa.fi:n hinnat sisältävät jo ALV 25,5 %, joten
+// niitä EI kerrota ALV-vakiolla toisin kuin ensisijaisen lähteen hintoja.
+const buildBackupPricesUrl = () => {
+    const isLocal = window.location.hostname === 'localhost';
+    const proxyPath = isLocal ? '/api2' : '/api-proxy2';
+    return `${proxyPath}/api/Prices/GetPrices?mode=2`;
+};
+
+const requestBackupTomorrowPrices = async (date) => {
+    const response = await fetch(buildBackupPricesUrl());
+    if (!response.ok) throw new Error(`Varalähteen virhe: ${response.status}`);
+    const data = await response.json();
+    const targetPvm = toPvm(date);
+
+    const slots = (data?.min15 ?? [])
+        // time on ISO-merkkijono Suomen aikavyöhykkeen offsetilla (esim.
+        // "2026-09-01T00:00:00+03:00") - poimitaan HH:MM suoraan
+        // merkkijonosta new Date() -parsinnan sijaan, ettei selaimen oma
+        // aikavyöhyke pääse vaikuttamaan tulokseen.
+        .filter(item => typeof item.time === 'string' && item.time.startsWith(targetPvm))
+        .map(item => ({
+            time: item.time.substring(11, 16),
+            price: item.value,
+        }));
+
+    if (slots.length === 0) throw new Error('Varalähteessäkään ei vielä dataa tälle päivälle');
+    return slots.sort((a, b) => a.time.localeCompare(b.time));
+};
+
 // ── Kalenterihälytysten laskenta ja tallennus ──────────────────────────────
 // Käytetään sekä tämän päivän "tästä eteenpäin" -tallennukseen että
 // huomisen koko päivän ennakkotallennukseen.
@@ -265,11 +297,20 @@ export const PriceProvider = ({ children }) => {
             tomorrowPricesRef.current = formattedData;
             setTomorrowPrices(formattedData);
             setTomorrowError(null);
-        } catch {
-            // Huomisen hintoja ei ole vielä julkaistu - ei virhe, yritetään
-            // myöhemmin uudelleen (ks. checkRollover).
-            tomorrowPricesRef.current = [];
-            setTomorrowPrices([]);
+        } catch (primaryErr) {
+            console.warn('Ensisijainen huomisen hintalähde ei vielä vastannut, kokeillaan varalähdettä:', primaryErr);
+            try {
+                const backupData = await requestBackupTomorrowPrices(d);
+                tomorrowPricesRef.current = backupData;
+                setTomorrowPrices(backupData);
+                setTomorrowError(null);
+            } catch (backupErr) {
+                // Kumpikaan lähde ei vielä tarjoa huomisen dataa - ei virhe,
+                // yritetään myöhemmin uudelleen (ks. checkRollover).
+                console.warn('Varalähdekään ei vielä tarjoa huomisen hintoja:', backupErr);
+                tomorrowPricesRef.current = [];
+                setTomorrowPrices([]);
+            }
         } finally {
             setTomorrowLoading(false);
             isFetchingTomorrowRef.current = false;

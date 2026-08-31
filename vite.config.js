@@ -9,6 +9,13 @@ export default defineConfig({
                 target: 'https://www.sahkohinta-api.fi',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, '')
+            },
+            // Varalähde: käytetään jos sahkohinta-api.fi ei vielä tarjoa
+            // huomisen hintoja (ks. requestBackupTomorrowPrices).
+            '/api2': {
+                target: 'https://www.porssisahkoa.fi',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api2/, '')
             }
         }
     }
