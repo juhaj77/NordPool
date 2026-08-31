@@ -101,7 +101,7 @@ const Tomorrow = () => {
                     {alertEnabled && !googleError && (
                         hasData
                             ? <span className="alert-hint">Vedä keltaista viivaa säätääksesi rajaa</span>
-                            : <span className="alert-hint">Odotetaan huomisen hintojen julkaisua (n. klo 13–14)</span>
+                            : <span className="alert-hint">Huomisen hinnat julkaistaan arviolta klo 14:15</span>
                     )}
                 </div>
             </div>
@@ -196,7 +196,7 @@ const Tomorrow = () => {
                     </ResponsiveContainer>
                 ) : (
                     <div className="no-tomorrow">
-                        Huomisen dataa ei ole vielä julkaistu.
+                        Huomisen hinnat julkaistaan arviolta klo 14:15.
                     </div>
                 )}
             </div>

@@ -4,6 +4,10 @@ const PriceContext = createContext(null);
 
 const ALV = 1.255;
 const STORAGE_KEY = 'nordpool-price-alert';
+// Täysi vuorokausi on 92-100 varttia (DST:n vaihtopäivinä 92 tai 100, muuten 96).
+// Jos lähde palauttaa vähemmän, kyse on osittaisesta/vielä keskeneräisestä
+// julkaisusta (esim. vain ensimmäinen tunti) - ei hyväksytä sitä "valmiiksi" dataksi.
+const MIN_FULL_DAY_SLOTS = 80;
 
 const loadSettings = () => {
     try {
@@ -294,6 +298,9 @@ export const PriceProvider = ({ children }) => {
         d.setDate(d.getDate() + 1);
         try {
             const formattedData = await requestDayPrices(d);
+            if (formattedData.length < MIN_FULL_DAY_SLOTS) {
+                throw new Error(`Ensisijainen lähde palautti vain osittaisen päivän (${formattedData.length} varttia)`);
+            }
             tomorrowPricesRef.current = formattedData;
             setTomorrowPrices(formattedData);
             setTomorrowError(null);
@@ -301,12 +308,16 @@ export const PriceProvider = ({ children }) => {
             console.warn('Ensisijainen huomisen hintalähde ei vielä vastannut, kokeillaan varalähdettä:', primaryErr);
             try {
                 const backupData = await requestBackupTomorrowPrices(d);
+                if (backupData.length < MIN_FULL_DAY_SLOTS) {
+                    throw new Error(`Varalähde palautti vain osittaisen päivän (${backupData.length} varttia)`);
+                }
                 tomorrowPricesRef.current = backupData;
                 setTomorrowPrices(backupData);
                 setTomorrowError(null);
             } catch (backupErr) {
-                // Kumpikaan lähde ei vielä tarjoa huomisen dataa - ei virhe,
-                // yritetään myöhemmin uudelleen (ks. checkRollover).
+                // Kumpikaan lähde ei vielä tarjoa huomisen dataa (tai data on
+                // vielä osittaista) - ei virhe, yritetään myöhemmin uudelleen
+                // (ks. checkRollover).
                 console.warn('Varalähdekään ei vielä tarjoa huomisen hintoja:', backupErr);
                 tomorrowPricesRef.current = [];
                 setTomorrowPrices([]);
