@@ -162,8 +162,8 @@ const CurrentDay = () => {
                                 stroke="#94a3b8"
                             />
                             <YAxis
-                                domain={alertEnabled ? [0, yMax] : [0, 'auto']}
-                                allowDataOverflow={alertEnabled}
+                                domain={[0, yMax]}
+                                allowDataOverflow={true}
                                 tickCount={12}
                                 tick={{ fontSize: 12, fontWeight: '600', fill: '#475569' }}
                                 tickFormatter={(val) => `${val.toFixed(0)}`}
