@@ -11,6 +11,8 @@ import {
 } from 'recharts';
 import { usePrices } from './PriceContext';
 import DraggableThreshold from './DraggableThreshold';
+import StatTile from './StatTile';
+import { useChartTheme, slotRangeLabel, priceStats } from './theme';
 
 const CurrentDay = () => {
     const {
@@ -31,6 +33,7 @@ const CurrentDay = () => {
         disableAlert,
         saveUpcomingAlertsToCalendar,
     } = usePrices();
+    const { C, gridStroke, axisStroke, axisTick, tooltipCursor, tooltipContentStyle, tooltipLabelStyle, tooltipItemStyle } = useChartTheme();
 
     const calculateCountdown = () => {
         const now = new Date();
@@ -51,14 +54,15 @@ const CurrentDay = () => {
 
     if (error) return <div className="error-message">Virhe: {error}</div>;
 
-    const maxPrice = prices.length > 0 ? Math.max(...prices.map(p => p.price)) : 0;
+    const stats = priceStats(prices);
+    const maxPrice = stats ? stats.max.price : 0;
     // Kiinteä Y-akselin yläraja pitää viivan ja pylväiden skaalan samana
     const yMax = Math.max(1, Math.ceil(maxPrice * 1.1));
 
     const barColor = (entry) => {
-        if (entry.time === nowKey) return '#ef4444';
-        if (alertEnabled && entry.price > alertThreshold) return '#f59e0b';
-        return '#3365ba';
+        if (entry.time === nowKey) return C.red;
+        if (alertEnabled && entry.price > alertThreshold) return C.amber;
+        return C.blue;
     };
 
     const adjustThreshold = (delta) => {
@@ -66,23 +70,36 @@ const CurrentDay = () => {
     };
 
     return (
-        <div className="card">
-            <div className="header">
-                <h1 className="title">
-                    <span>⚡ Sähkön hinta tänään</span>
-                    <span className="current-price">
-                        NYT: {currentPrice != null ? (
-                        <>
-                            <span style={{ color: 'black' }}>{currentPrice.toFixed(2)}</span> c/kWh
-                            (<span style={{ color: 'black' }}>{calculateCountdown()}</span>)
-                        </>
-                    ) : '--'}
-                    </span>
-                    <span className="max-price">
-                        KALLEIN: {maxPrice ? `${maxPrice.toFixed(2)} c/kWh` : '--'}
-                    </span>
-                </h1>
+        <div className="view">
+            <div className="stat-row">
+                <StatTile
+                    label="Nyt"
+                    tone="red"
+                    value={currentPrice != null ? currentPrice.toFixed(2) : null}
+                    unit="c/kWh"
+                    sub={currentPrice != null ? `vaihtuu ${calculateCountdown()}` : 'ei dataa'}
+                />
+                <StatTile
+                    label="Kallein"
+                    value={stats ? stats.max.price.toFixed(2) : null}
+                    unit="c/kWh"
+                    sub={stats ? `klo ${stats.max.time}` : null}
+                />
+                <StatTile
+                    label="Halvin"
+                    value={stats ? stats.min.price.toFixed(2) : null}
+                    unit="c/kWh"
+                    sub={stats ? `klo ${stats.min.time}` : null}
+                />
+                <StatTile
+                    label="Keskiarvo"
+                    value={stats ? stats.avg.toFixed(2) : null}
+                    unit="c/kWh"
+                    sub={stats ? `${stats.count} varttia` : null}
+                />
+            </div>
 
+            <div className="panel toolbar">
                 <div className="alert-controls">
                     <label className="switch">
                         <input
@@ -95,30 +112,19 @@ const CurrentDay = () => {
                     <span className="alert-label">Hintahälytys</span>
 
                     {alertEnabled && googleAuthed && (
-                        <span className="alert-google-badge">📅 Google Kalenteri</span>
+                        <span className="pill pill-green">Google Kalenteri</span>
                     )}
 
                     {alertEnabled && (
                         <span className="alert-value">
-                            Raja: <strong>{alertThreshold.toFixed(1)} c/kWh</strong>
+                            Raja <strong>{alertThreshold.toFixed(1)} c/kWh</strong>
                             <button type="button" onClick={() => adjustThreshold(-0.5)} aria-label="Vähennä">–</button>
                             <button type="button" onClick={() => adjustThreshold(0.5)} aria-label="Lisää">+</button>
                         </span>
                     )}
 
-                    {alertEnabled && googleAuthed && (
-                        <button
-                            type="button"
-                            className="save-offline-btn"
-                            onClick={saveUpcomingAlertsToCalendar}
-                            disabled={saving}
-                        >
-                            {saving ? 'Tallennetaan...' : '📅 Tallenna hälytykset kalenteriin'}
-                        </button>
-                    )}
-
                     {savedCount !== null && !saving && (
-                        <span className={savedCount > 0 ? 'alert-google-badge' : 'alert-hint'}>
+                        <span className={savedCount > 0 ? 'pill pill-green' : 'alert-hint'}>
                             {savedCount > 0
                                 ? `✓ ${savedCount} hälytystä tallennettu`
                                 : 'Ei tulevia ylityksiä tänään'}
@@ -131,107 +137,94 @@ const CurrentDay = () => {
 
                     {alertEnabled && !googleError && (
                         isOverThreshold
-                            ? <span className="alert-badge over">⚠ Hinta yli rajan!</span>
-                            : <span className="alert-hint">Vedä keltaista viivaa säätääksesi rajaa</span>
+                            ? <span className="alert-badge over">⚠ Hinta yli rajan</span>
+                            : <span className="alert-hint">vedä keltaista viivaa säätääksesi rajaa</span>
                     )}
                 </div>
+
+                {alertEnabled && googleAuthed && (
+                    <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={saveUpcomingAlertsToCalendar}
+                        disabled={saving}
+                    >
+                        {saving ? 'Tallennetaan…' : 'Tallenna hälytykset kalenteriin'}
+                    </button>
+                )}
             </div>
 
-            <div className="chart-container">
-                {!loading && prices.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart
-                            data={prices}
-                            barCategoryGap={'3%'}
-                            margin={{ left: 0, right: 0, top: 20 }}
-                        >
-                            <CartesianGrid
-                                strokeDasharray="0"
-                                vertical={true}
-                                horizontal={true}
-                                stroke="rgba(0,0,0,0.15)"
-                            />
-                            <XAxis
-                                dataKey="time"
-                                interval={3}
-                                scale="band"
-                                tickPlacement="on"
-                                padding={{ left: 0, right: 0 }}
-                                tickFormatter={(time) => parseInt(time.split(':')[0], 10).toString()}
-                                tick={{ fontSize: 12, fontWeight: '600', fill: '#475569' }}
-                                stroke="#94a3b8"
-                            />
-                            <YAxis
-                                domain={[0, yMax]}
-                                allowDataOverflow={true}
-                                tickCount={12}
-                                tick={{ fontSize: 12, fontWeight: '600', fill: '#475569' }}
-                                tickFormatter={(val) => `${val.toFixed(0)}`}
-                                stroke="#94a3b8"
-                            />
-                            <Tooltip
-                                cursor={{ stroke: '#1e293b', strokeWidth: 2 }}
-                                labelFormatter={(label) => {
-                                    const [hours, minutes] = label.split(':').map(Number);
-                                    const date = new Date();
-                                    date.setHours(hours, minutes, 0);
-                                    const endDate = new Date(date.getTime() + 15 * 60000);
-                                    const endLabel = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
-                                    return `${label} – ${endLabel}`;
-                                }}
-                                contentStyle={{
-                                    backgroundColor: '#ffffff',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                                    padding: '10px'
-                                }}
-                                labelStyle={{
-                                    backgroundColor: '#3365ba',
-                                    padding: '4px 0',
-                                    textAlign: 'center',
-                                    borderRadius: '4px',
-                                    display: 'block',
-                                    marginBottom: '8px',
-                                    color: 'white',
-                                    fontWeight: '700',
-                                    fontSize: '13px'
-                                }}
-                                itemStyle={{
-                                    fontSize: '13px',
-                                    fontWeight: '600',
-                                    color: '#1e293b',
-                                    padding: '0px'
-                                }}
-                                formatter={(value) => [`${value.toFixed(2)} c/kWh`, 'Hinta']}
-                            />
-                            <ReferenceLine
-                                x={nowKey}
-                                stroke="#ef4444"
-                                strokeWidth={3}
-                                label={{ fontSize: '11px', value: 'NYT', fill: '#ef4444', position: 'top', fontWeight: 'bold', offset: 8 }}
-                            />
-                            <Bar dataKey="price" isAnimationActive={false}>
-                                {prices.map((entry) => (
-                                    <Cell
-                                        key={`cell-${entry.time}`}
-                                        fill={barColor(entry)}
-                                    />
-                                ))}
-                            </Bar>
-                            {alertEnabled && (
-                                <DraggableThreshold
-                                    threshold={alertThreshold}
-                                    yMax={yMax}
-                                    over={isOverThreshold}
-                                    onChange={setAlertThreshold}
+            <div className="panel chart-panel">
+                <div className="panel-title">
+                    Sähkön hinta tänään
+                    <span className="panel-sub">15 min vartit · sis. ALV 25,5 % · c/kWh</span>
+                </div>
+                <div className="chart-container">
+                    {!loading && prices.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ComposedChart
+                                data={prices}
+                                barCategoryGap={'12%'}
+                                margin={{ left: -10, right: 0, top: 20 }}
+                            >
+                                <CartesianGrid vertical={false} stroke={gridStroke} />
+                                <XAxis
+                                    dataKey="time"
+                                    interval={3}
+                                    scale="band"
+                                    tickPlacement="on"
+                                    padding={{ left: 0, right: 0 }}
+                                    tickFormatter={(time) => parseInt(time.split(':')[0], 10).toString()}
+                                    tick={axisTick}
+                                    stroke={axisStroke}
+                                    tickLine={false}
                                 />
-                            )}
-                        </ComposedChart>
-                    </ResponsiveContainer>
-                ) : (
-                    <div className="loading">Ladataan hintoja...</div>
-                )}
+                                <YAxis
+                                    domain={[0, yMax]}
+                                    allowDataOverflow={true}
+                                    tickCount={8}
+                                    tick={axisTick}
+                                    tickFormatter={(val) => `${val.toFixed(0)}`}
+                                    stroke={axisStroke}
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <Tooltip
+                                    cursor={tooltipCursor}
+                                    labelFormatter={slotRangeLabel}
+                                    contentStyle={tooltipContentStyle}
+                                    labelStyle={tooltipLabelStyle}
+                                    itemStyle={tooltipItemStyle}
+                                    formatter={(value) => [`${value.toFixed(2)} c/kWh`, 'Hinta']}
+                                />
+                                <ReferenceLine
+                                    x={nowKey}
+                                    stroke={C.red}
+                                    strokeWidth={2}
+                                    label={{ fontSize: 10, value: 'NYT', fill: C.red, position: 'top', fontWeight: 700, offset: 8 }}
+                                />
+                                <Bar dataKey="price" isAnimationActive={false} radius={[2, 2, 0, 0]}>
+                                    {prices.map((entry) => (
+                                        <Cell
+                                            key={`cell-${entry.time}`}
+                                            fill={barColor(entry)}
+                                        />
+                                    ))}
+                                </Bar>
+                                {alertEnabled && (
+                                    <DraggableThreshold
+                                        threshold={alertThreshold}
+                                        yMax={yMax}
+                                        over={isOverThreshold}
+                                        onChange={setAlertThreshold}
+                                    />
+                                )}
+                            </ComposedChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="loading">Ladataan hintoja…</div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { usePlotArea } from 'recharts';
+import { useChartTheme } from './theme';
 
 // Vedettävä vaakaviiva raja-arvon valintaan. Renderöidään ComposedChartin
 // lapsena, jolloin usePlotArea() antaa piirtoalueen pikselikoordinaatit.
@@ -7,6 +8,7 @@ import { usePlotArea } from 'recharts';
 const DraggableThreshold = ({ threshold, yMax, onChange, over }) => {
     const plot = usePlotArea();
     const draggingRef = useRef(false);
+    const { C } = useChartTheme();
     if (!plot) return null;
 
     const { x, y, width, height } = plot;
@@ -37,7 +39,7 @@ const DraggableThreshold = ({ threshold, yMax, onChange, over }) => {
         window.addEventListener('pointerup', onUp);
     };
 
-    const color = over ? '#ef4444' : '#f59e0b';
+    const color = over ? C.red : C.amber;
 
     return (
         <g>
@@ -63,8 +65,8 @@ const DraggableThreshold = ({ threshold, yMax, onChange, over }) => {
             />
             {/* Kahva, joka näyttää valitun rajahinnan */}
             <g style={{ cursor: 'ns-resize' }} onPointerDown={startDrag}>
-                <rect x={right - 78} y={py - 12} width={74} height={24} rx={12} fill={color} />
-                <text x={right - 41} y={py + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="#ffffff">
+                <rect x={right - 78} y={py - 12} width={74} height={24} rx={4} fill={color} />
+                <text x={right - 41} y={py + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill={C.onAccent}>
                     {threshold.toFixed(1)} c
                 </text>
             </g>

@@ -12,8 +12,10 @@ import {
 } from 'recharts';
 
 import stdIcon from '../assets/population_standard_deviation.svg';
+import { useChartTheme } from './theme';
 
 const Statistics = () => {
+    const { C, gridStroke, axisStroke, axisTick, tooltipContentStyle, tooltipLabelStyle, tooltipItemStyle } = useChartTheme();
     const [rawPrices, setRawPrices] = useState([]);
     const [daysToFetch, setDaysToFetch] = useState(1);
     const [loading, setLoading] = useState(true);
@@ -97,109 +99,110 @@ const Statistics = () => {
     const nowKey = `${String(currentTime.getHours()).padStart(2, '0')}:${String(Math.floor(currentTime.getMinutes() / 15) * 15).padStart(2, '0')}`;
 
     return (
-        <div className="card">
-            <div className="statistics-header">
-                <h1 className="statistics-title">
-                    <div className="label">
-                    <span>⚡ {daysToFetch > 1 ? `${daysToFetch} pv keskiarvo & ` : 'Sähkön hinta tänään'}</span>
-                    {daysToFetch > 1 && (
-                        <span className="span">
-                            keskihajonta
-                            <img
-                                className="img"
-                                src={stdIcon}
-                                alt="Standard Deviation"
-                            />
-                        </span>
-                    )}
+        <div className="view">
+            <div className="panel toolbar">
+                <div className="alert-controls">
+                    <span className="toolbar-label">Ikkuna</span>
+                    <div className="segmented">
+                        {[1, 2, 3, 7, 14, 30].map(v => (
+                            <button
+                                key={v}
+                                type="button"
+                                className={daysToFetch === v ? 'active' : ''}
+                                onClick={() => setDaysToFetch(v)}
+                            >
+                                {v} pv
+                            </button>
+                        ))}
                     </div>
-                </h1>
-
-                <div className="controls">
-                    <label className="label">Päivät:</label>
-                    <select
-                        className="select"
-                        value={daysToFetch}
-                        onChange={(e) => setDaysToFetch(Number(e.target.value))}
-                    >
-                        {[1, 2, 3, 7, 14, 30].map(v => <option key={v} value={v}>{v}</option>)}
-                    </select>
+                    <span className="alert-hint">
+                        {daysToFetch > 1 ? `${daysToFetch} viimeisintä päivää` : 'vain tämä päivä'}
+                    </span>
                 </div>
             </div>
 
-            <div className="chart-container">
-                {!loading ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={chartData} barCategoryGap={'3%'} margin={{ left: 0, right: 0, top: 20 }}>
-                            <CartesianGrid strokeDasharray="0" vertical={true} horizontal={true} stroke="rgba(0,0,0,0.1)"/>
-                            <XAxis
-                                dataKey="time"
-                                interval={7}
-                                tickFormatter={(t) => t.split(':')[0]}
-                                tick={{fontSize: 11, fill: '#64748b'}}
-                            />
-                            <YAxis tick={{fontSize: 11, fill: '#64748b'}} tickFormatter={(v) => v.toFixed(0)} />
+            <div className="panel chart-panel">
+                <div className="panel-title">
+                    {daysToFetch > 1 ? `${daysToFetch} pv keskiarvo & keskihajonta` : 'Sähkön hinta tänään'}
+                    {daysToFetch > 1 && (
+                        <img className="std-icon" src={stdIcon} alt="Keskihajonta" />
+                    )}
+                    <span className="panel-sub">sis. ALV 25,5 % · c/kWh</span>
+                </div>
+                <div className="chart-container">
+                    {!loading ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ComposedChart data={chartData} margin={{ left: -10, right: 0, top: 20 }}>
+                                <CartesianGrid vertical={false} stroke={gridStroke} />
+                                <XAxis
+                                    dataKey="time"
+                                    interval={7}
+                                    tickFormatter={(t) => t.split(':')[0]}
+                                    tick={axisTick}
+                                    stroke={axisStroke}
+                                    tickLine={false}
+                                />
+                                <YAxis
+                                    tick={axisTick}
+                                    tickFormatter={(v) => v.toFixed(0)}
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
 
-                            <Tooltip
-                                labelFormatter={(label) => `Klo ${label}`}
-                                contentStyle={{
-                                    borderRadius: '10px',
-                                    border: 'none',
-                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                                    color: '#1e293b'
-                                }}
-                                itemStyle={{
-                                    color: '#1e293b',
-                                    fontWeight: '600',
-                                    padding: '2px 0'
-                                }}
-                                labelStyle={{ fontWeight: '800', marginBottom: '4px', color: '#3365ba' }}
-                                formatter={(value, name, props) => {
-                                    if (name === "stdRange") {
-                                        const stdValue = props.payload.stdDev;
-                                        return [`±${stdValue.toFixed(2)} c/kWh`, 'Keskihajonta'];
-                                    }
-                                    if (name === "avg") return [`${value.toFixed(2)} c/kWh`, 'Keskiarvo'];
-                                    return [`${value.toFixed(2)} c/kWh`, 'Hinta'];
-                                }}
-                            />
+                                <Tooltip
+                                    cursor={{ stroke: C.borderStrong, strokeWidth: 1 }}
+                                    labelFormatter={(label) => `klo ${label}`}
+                                    contentStyle={tooltipContentStyle}
+                                    labelStyle={tooltipLabelStyle}
+                                    itemStyle={tooltipItemStyle}
+                                    formatter={(value, name, props) => {
+                                        if (name === "stdRange") {
+                                            const stdValue = props.payload.stdDev;
+                                            return [`±${stdValue.toFixed(2)} c/kWh`, 'Keskihajonta'];
+                                        }
+                                        if (name === "avg") return [`${value.toFixed(2)} c/kWh`, 'Keskiarvo'];
+                                        return [`${value.toFixed(2)} c/kWh`, 'Hinta'];
+                                    }}
+                                />
 
-                            {daysToFetch > 1 && (
-                                <Area
-                                    type="monotone"
-                                    dataKey="stdRange"
-                                    fill="#cbd5e1"
-                                    stroke="none"
-                                    name="stdRange"
-                                    isAnimationActive={false} />
-                            )}
+                                {daysToFetch > 1 && (
+                                    <Area
+                                        type="monotone"
+                                        dataKey="stdRange"
+                                        fill={C.blue}
+                                        fillOpacity={0.18}
+                                        stroke="none"
+                                        name="stdRange"
+                                        isAnimationActive={false} />
+                                )}
 
-                            {daysToFetch === 1 && (
-                                <Line
-                                    type="stepAfter"
-                                    dataKey="currentDayPrice"
-                                    stroke="#3365ba"
-                                    strokeWidth={3}
-                                    dot={false}
-                                    name="currentDayPrice"
-                                    isAnimationActive={false} />
-                            )}
+                                {daysToFetch === 1 && (
+                                    <Line
+                                        type="stepAfter"
+                                        dataKey="currentDayPrice"
+                                        stroke={C.blue}
+                                        strokeWidth={2}
+                                        dot={false}
+                                        name="currentDayPrice"
+                                        isAnimationActive={false} />
+                                )}
 
-                            {daysToFetch > 1 && (
-                                <Line
-                                    type="monotone"
-                                    dataKey="avg"
-                                    stroke="#1e293b"
-                                    strokeWidth={2}
-                                    dot={false}
-                                    name="avg"
-                                    isAnimationActive={false} />
-                            )}
+                                {daysToFetch > 1 && (
+                                    <Line
+                                        type="monotone"
+                                        dataKey="avg"
+                                        stroke={C.teal}
+                                        strokeWidth={2}
+                                        dot={false}
+                                        name="avg"
+                                        isAnimationActive={false} />
+                                )}
 
-                            <ReferenceLine x={nowKey} stroke="#ef4444" strokeWidth={2} label={{ value: 'NYT', position: 'top', fill: '#ef4444', fontSize: 10 }} />
-                        </ComposedChart>
-                    </ResponsiveContainer>
-                ) : <div className="loading">Ladataan tilastoja...</div>}
+                                <ReferenceLine x={nowKey} stroke={C.red} strokeWidth={2} label={{ value: 'NYT', position: 'top', fill: C.red, fontSize: 10, fontWeight: 700 }} />
+                            </ComposedChart>
+                        </ResponsiveContainer>
+                    ) : <div className="loading">Ladataan tilastoja…</div>}
+                </div>
             </div>
         </div>
     );
